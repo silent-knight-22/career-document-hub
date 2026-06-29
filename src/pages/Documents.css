@@ -1,0 +1,156 @@
+/* Documents page */
+
+.doc-dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-card);
+  margin-bottom: 1.25rem;
+}
+.doc-dropzone:hover, .doc-dropzone.active {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+}
+[data-theme="dark"] .doc-dropzone:hover,
+[data-theme="dark"] .doc-dropzone.active { background: rgba(99,102,241,0.08); }
+
+.doc-dropzone-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.doc-dropzone-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.doc-dropzone-sub { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; }
+
+/* Search */
+.doc-search {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+.doc-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+.doc-search-input::placeholder { color: var(--text-placeholder); }
+
+/* Doc list */
+.doc-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.doc-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+.doc-card:hover { box-shadow: var(--shadow-card-hover); }
+
+.doc-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.doc-card-icon[data-type="pdf"] { background: #dbeafe; color: #3b82f6; }
+.doc-card-icon[data-type="image"] { background: #d1fae5; color: #10b981; }
+
+.doc-card-info { flex: 1; min-width: 0; }
+.doc-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.doc-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  flex-wrap: wrap;
+}
+.doc-meta span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.doc-status { flex-shrink: 0; }
+.doc-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+
+/* Size limit notice */
+.doc-size-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.875rem;
+  margin-bottom: 0.75rem;
+}
+.doc-size-notice strong { color: var(--text-primary); }
+
+/* Upload progress ring */
+.doc-dropzone.uploading {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+[data-theme="dark"] .doc-dropzone.uploading { background: rgba(99,102,241,0.08); }
+
+.doc-upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.doc-progress-ring {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+.doc-progress-ring svg { transform: rotate(-90deg); }
+.doc-progress-pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+}
+/* Make the ring arc work correctly */
+.doc-progress-ring circle:last-child {
+  stroke-dasharray: calc(var(--pct, 0) * 1.005) 100.5;
+}
+

@@ -1,0 +1,126 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+/* Signatures grid */
+.signatures-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.sig-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+}
+
+.sig-default-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  z-index: 2;
+}
+
+.sig-preview-area {
+  height: 140px;
+  background: white;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.sig-preview-area img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.sig-card-body {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sig-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.375rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.sig-meta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.sig-date {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.sig-card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.sig-action-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+.sig-action-btn:hover { background: var(--bg-card-hover); color: var(--brand-primary); border-color: var(--brand-primary); }
+.sig-action-btn.danger:hover { background: var(--color-error-light); color: var(--color-error); border-color: var(--color-error); }
+
+/* Add card */
+.sig-add-card {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: var(--bg-card);
+}
+.sig-add-card:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+  text-decoration: none;
+}
+[data-theme="dark"] .sig-add-card:hover { background: rgba(99,102,241,0.08); }
+
+.sig-add-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-tertiary);
+}
+.sig-add-inner p { font-size: 0.875rem; font-weight: 600; }
+.sig-add-card:hover .sig-add-inner { color: var(--brand-primary); }
