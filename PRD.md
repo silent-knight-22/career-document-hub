@@ -3,7 +3,7 @@
 ## 1. Executive Summary
 
 ### 1.1 Project Overview
-The **Career Document Hub** is a secure, unified document lifecycle platform designed to streamline how professionals, students, and recruiters manage career credentials, draft resumes, digitally sign contracts, and perform intelligent, AI-driven document analysis. In its initial iteration (Phase 1), the platform is implemented as a premium React-based frontend web application utilizing local storage for session persistence and localized data caching, alongside direct client-side integration with the Google Gemini API for deep document understanding.
+The **Career Document Hub** is a secure, unified document lifecycle platform designed to streamline how professionals, students, and recruiters manage career credentials, draft resumes, digitally sign contracts, and perform intelligent, AI-driven document analysis. In its initial iteration (Phase 1), the platform is implemented as a premium React-based frontend web application utilizing local storage for session persistence and localized data caching, alongside direct client-side integration with the Google Groq API for deep document understanding.
 
 ### 1.2 Problem Statement
 Job seekers, students, and working professionals are forced to juggle multiple disjointed tools for daily career-related tasks:
@@ -28,20 +28,20 @@ To securely build, store, search, track, and digitally sign all career-critical 
 *   **Local State & Persistence**: Context API state propagation with complete fallback caching in `localStorage`.
 *   **Document Storage & Management**: Categorized file storage (base64 documents and signatures) with dynamic metadata extensions (tags, expiry alert logs).
 *   **Interactive Signature Pad**: Custom canvas drawing board and typed/uploaded signature manager.
-*   **Client-side RAG & AI QA**: Dynamic auto-discovery of Gemini models using the client's API key, document parsing, key-value extraction, and simulated Retrieval-Augmented Generation (RAG) using cached summaries as context.
+*   **Client-side RAG & AI QA**: Dynamic auto-discovery of Groq models using the client's API key, document parsing, key-value extraction, and simulated Retrieval-Augmented Generation (RAG) using cached summaries as context.
 
 ---
 
 ## 2. Product Vision
 
 ### 2.1 The "Why"
-The Career Document Hub is built to restore control to the user over their professional paperwork. Personal documents are valuable, and analyzing them shouldn't mean sharing them with insecure third-party platforms that harvest candidate data. By using a secure local-first architecture that talks directly to Gemini via the user's own API key, we respect user privacy while delivering enterprise-grade AI analytics.
+The Career Document Hub is built to restore control to the user over their professional paperwork. Personal documents are valuable, and analyzing them shouldn't mean sharing them with insecure third-party platforms that harvest candidate data. By using a secure local-first architecture that talks directly to Groq via the user's own API key, we respect user privacy while delivering enterprise-grade AI analytics.
 
 ### 2.2 Core Problems Solved
 1.  **Fragmented Resume Lifecycle**: Seamlessly transitions from building resumes to saving drafts and exporting clean, standardized PDFs.
 2.  **Unstructured Credential Management**: Stores and monitors academic certificates, professional credentials, and transcripts with specific fields (Credential ID, Credential URL, Expiry Date).
 3.  **Complex Signature Orchestration**: Bridges the gap between signature preparation (drawing, uploading, typing) and placing signature stamps onto uploaded PDF documents.
-4.  **Information Asymmetry in Contracts**: Levels the playing field for candidates by using Gemini to extract financial details (notice periods, salaries, probation terms) and highlighting restrictive covenants (non-compete clauses, IP ownership) before signing.
+4.  **Information Asymmetry in Contracts**: Levels the playing field for candidates by using Groq to extract financial details (notice periods, salaries, probation terms) and highlighting restrictive covenants (non-compete clauses, IP ownership) before signing.
 5.  **Certification Expiration Risks**: Employs an active certificate tracker that flags documents expiring within 30 or 90 days.
 
 ---
@@ -74,7 +74,7 @@ graph TD
 ### 3.2 Secondary Goals
 *   **Exceptional UI/UX**: Professional, high-contrast, responsive interface supporting smooth micro-animations, transitions, and automatic light/dark theme tracking.
 *   **Proactive Document Tracking**: A visual countdown indicator showing validation days left and highlighting critical actions.
-*   **Client-Side Privacy**: Ensure sensitive credentials remain inside the client browser, sending only data to Gemini via secure, direct HTTPS tunnels.
+*   **Client-Side Privacy**: Ensure sensitive credentials remain inside the client browser, sending only data to Groq via secure, direct HTTPS tunnels.
 *   **Modular Extensibility**: Clear separation of concern between services and layout components to allow quick backend swapping (Vite/localStorage to Spring Boot REST endpoints).
 
 ---
@@ -169,10 +169,10 @@ graph TD
 
 ### 6.2 Scalability
 *   **NFR-SCAL-1 (Client Architecture)**: The codebase must separate service interfaces from storage logic (using adapter wrappers), allowing the frontend to switch from localStorage APIs to Spring Boot REST endpoints with minimal modifications.
-*   **NFR-SCAL-2 (Model Agnosticism)**: The AI Insights layer must resolve model support dynamically, making the code compatible with future Gemini releases without code updates.
+*   **NFR-SCAL-2 (Model Agnosticism)**: The AI Insights layer must resolve model support dynamically, making the code compatible with future Groq releases without code updates.
 
 ### 6.3 Security
-*   **NFR-SEC-1 (API Key Isolation)**: Gemini API keys must reside exclusively in client local storage and must never be logged or sent to third-party endpoints.
+*   **NFR-SEC-1 (API Key Isolation)**: Groq API keys must reside exclusively in client local storage and must never be logged or sent to third-party endpoints.
 *   **NFR-SEC-2 (No Server Middlemen)**: All API payloads must travel directly between the client browser and `googleapis.com` via TLS 1.3.
 *   **NFR-SEC-3 (Credential Exposure Prevention)**: Password inputs must mask entries during authentication, and context profiles must scrub passwords from runtime state models.
 
@@ -287,12 +287,12 @@ flowchart TD
     SaveDoc --> DownloadDoc([Download signed document output])
 ```
 
-### 7.5 Gemini AI Key Setup and Document Analysis Flow
+### 7.5 Groq AI Key Setup and Document Analysis Flow
 Illustrates the user journey of registering an API key, verifying it, uploading a document, and engaging in context-aware Q&A chat.
 
 ```mermaid
 flowchart TD
-    Key1([User goes to /ai]) --> Key2{Is Gemini API Key configured?}
+    Key1([User goes to /ai]) --> Key2{Is Groq API Key configured?}
     Key2 -- No --> SetupKey[Show API Key Setup Input Panel]
     SetupKey --> KeySubmit[User enters key and clicks Verify]
     KeySubmit --> APIReq[Query listModels endpoint using key]
@@ -319,8 +319,8 @@ flowchart TD
     RenderAnalysis --> ChatInit[Display suggested questions list & Q&A Chat window]
     ChatInit --> UserAsk[User inputs custom question]
     UserAsk --> BuildCtx[Build retrieval context using cached analysis schema]
-    BuildCtx --> CallGemini[Post history + context + query to Gemini endpoint]
-    CallGemini --> PrintAnswer[Display comprehensive markdown response with source citations]
+    BuildCtx --> CallGroq[Post history + context + query to Groq endpoint]
+    CallGroq --> PrintAnswer[Display comprehensive markdown response with source citations]
 ```
 
 ---
@@ -335,7 +335,7 @@ The Career Document Hub is designed to evolve from a local-first utility to an e
     *   JWT-based authentication with bcrypt password hashing.
     *   PostgreSQL database schema for secure storage of user metadata, profile information, and document references.
     *   File storage integration with AWS S3 or Google Cloud Storage.
-    *   Secure backend proxying of all Gemini API requests to hide API keys from the client build.
+    *   Secure backend proxying of all Groq API requests to hide API keys from the client build.
 
 ### Phase 3: Performance Optimization & Redis Caching
 *   **Goal**: Minimize database lookups, implement distributed session tracking, and cache expensive operations.
@@ -355,7 +355,7 @@ The Career Document Hub is designed to evolve from a local-first utility to an e
 *   **Goal**: Search across the entire vault using natural language semantic queries.
 *   **Features**:
     *   Backend vector database integration (e.g., PostgreSQL pgvector, Pinecone, or Milvus).
-    *   Document text extraction, chunking, and embedding generation via Gemini text-embedding models.
+    *   Document text extraction, chunking, and embedding generation via Groq text-embedding models.
     *   Context-aware search interface: "Find the contract that mentions my 30-day notice period."
 
 ### Phase 6: Cryptographic Signature Verification

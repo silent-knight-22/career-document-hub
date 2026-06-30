@@ -65,17 +65,17 @@ graph TD
             CertSvc[certificateService.js]
             ResSvc[resumeService.js]
             SigSvc[signatureService.js]
-            GeminiSvc[geminiService.js]
+            GroqSvc[groqService.js]
         end
     end
     
     subgraph Browser Storage APIs
         LS[localStorage: cdh_*, career-document-hub_*]
-        SS[sessionStorage: cdh_gemini_resolved_model]
+        SS[sessionStorage: cdh_groq_resolved_model]
     end
     
     subgraph External Services
-        GeminiAPI[Google Generative Language API]
+        GroqAPI[Google Generative Language API]
     end
 
     User --> App
@@ -103,12 +103,12 @@ graph TD
     Certs --> CertSvc
     Res --> ResSvc
     Sigs & SignDoc --> SigSvc
-    AI --> GeminiSvc
+    AI --> GroqSvc
     
     %% Storage wiring
-    AuthSvc & VaultSvc & CertSvc & ResSvc & SigSvc & GeminiSvc --> LS
-    GeminiSvc --> SS
-    GeminiSvc -->|HTTPS fetch| GeminiAPI
+    AuthSvc & VaultSvc & CertSvc & ResSvc & SigSvc & GroqSvc --> LS
+    GroqSvc --> SS
+    GroqSvc -->|HTTPS fetch| GroqAPI
 ```
 
 ### 2.2 System Component Block Diagram
@@ -133,7 +133,7 @@ graph LR
     
     subgraph Data Integration Layer
         StorageAPI[LocalStorage Service Adapters]
-        NetworkAPI[Direct Gemini API HTTP Handlers]
+        NetworkAPI[Direct Groq API HTTP Handlers]
     end
 
     UI --> Guard
@@ -143,7 +143,7 @@ graph LR
     UserState --> StorageAPI
     ThemeState --> UI
     StorageAPI --> NetworkAPI
-    NetworkAPI --> GeminiAPI[Google APIs]
+    NetworkAPI --> GroqAPI[Google APIs]
 ```
 
 ---
@@ -178,7 +178,7 @@ src/
 │   ├── Certificates.css/.jsx  # Certificate repository upload and views
 │   ├── CreateSignature.css/.jsx # Signature designer (canvas & styled text fields)
 │   ├── Dashboard.css/.jsx     # System dashboard displaying stats and checklist items
-│   ├── DocumentAI.css/.jsx    # Gemini analytical setup and chat interface
+│   ├── DocumentAI.css/.jsx    # Groq analytical setup and chat interface
 │   ├── Documents.css/.jsx     # Repository of signed/unsigned PDFs
 │   ├── Expiry.css/.jsx        # Tracking center displaying upcoming expiration dates
 │   ├── MySignatures.css/.jsx  # List of signatures with option to select a default
@@ -192,7 +192,7 @@ src/
 │   ├── authService.js         # Manages registration, logins, and profile updates
 │   ├── certificateService.js  # Manages certificate CRUD operations
 │   ├── documentService.js     # Manages signed/unsigned file states
-│   ├── geminiService.js       # Manages Gemini model resolution, parsing, and chat history
+│   ├── groqService.js       # Manages Groq model resolution, parsing, and chat history
 │   ├── resumeService.js       # Manages resume draft saving and structures
 │   ├── signatureService.js    # Manages drawn or uploaded signatures
 │   └── vaultService.js        # Manages vault metadata classifications
@@ -408,7 +408,7 @@ graph TD
 
 ### 8.7 AI Insights (`/ai`)
 *   **Purpose**: AI-powered document extraction and analysis.
-*   **Core Components**: Gemini API Key panel, document dropdown selector, analysis detail tabs, and chat message thread.
+*   **Core Components**: Groq API Key panel, document dropdown selector, analysis detail tabs, and chat message thread.
 *   **Inputs**:
     *   API Key - Text input.
     *   Document Selection - Dropdown of uploaded files.
@@ -432,13 +432,13 @@ graph TD
         LS[(Browser Local Storage)]
     end
     
-    Gemini[Google Gemini API]
+    Groq[Google Groq API]
     
     User -->|1. Enter Credentials / Forms / Files| UI
     UI -->|2. Save Data & Documents| LS
     LS -->|3. Retrieve Cached Files & Session| UI
-    UI -->|4. Base64 Documents & Prompts| Gemini
-    Gemini -->|5. Structured JSON & Answers| UI
+    UI -->|4. Base64 Documents & Prompts| Groq
+    Groq -->|5. Structured JSON & Answers| UI
     UI -->|6. Render PDF Downloads & AI Insights| User
 ```
 
@@ -458,7 +458,7 @@ graph TD
     subgraph Services [Data Controller Layer]
         VaultSvc[vaultService.js]
         SigSvc[signatureService.js]
-        AISvc[geminiService.js]
+        AISvc[groqService.js]
     end
     
     subgraph Cache [Storage Layers]
@@ -469,7 +469,7 @@ graph TD
         SessionModel[(SessionStorage: Best Model)]
     end
     
-    ExternalAPI[Gemini REST API]
+    ExternalAPI[Groq REST API]
 
     %% Vault Operations
     User -->|Upload files & metadata| VaultView
@@ -564,7 +564,7 @@ flowchart TD
     P --> Q([Show Success notification & Update Vault state])
 ```
 
-### 10.3 Gemini API Key Verification Control Flow
+### 10.3 Groq API Key Verification Control Flow
 This diagram shows the API key validation steps and model configuration choices.
 
 ```mermaid
@@ -650,15 +650,15 @@ sequenceDiagram
 ```
 
 ### 11.3 AI Key Verification Sequence
-This diagram displays the steps required to verify a user-provided Gemini API key.
+This diagram displays the steps required to verify a user-provided Groq API key.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User
     participant UI as Document AI Setup Panel
-    participant Svc as geminiService.js
-    participant API as Google Gemini listModels API
+    participant Svc as groqService.js
+    participant API as Google Groq listModels API
 
     User->>UI: Enter API Key and click Verify
     UI->>Svc: Call verifyApiKey(key)
@@ -692,8 +692,8 @@ The application uses local validations to catch errors early, preventing unneces
 *   **File Size Checks**: Restricts uploads to a maximum file size of 5MB before conversion to prevent browser memory issues.
 *   **Format Safeguards**: File input tags use explicit accept categories (`accept="application/pdf, image/*"`).
 
-### 12.3 Gemini API and Key Failures
-*   **Dynamic Reset**: If a Gemini model request fails with a `404 Not Found` (e.g., if a model is deprecated), the application clears the cached model in `sessionStorage`. This forces a re-query on the next request to resolve a supported model automatically.
+### 12.3 Groq API and Key Failures
+*   **Dynamic Reset**: If a Groq model request fails with a `404 Not Found` (e.g., if a model is deprecated), the application clears the cached model in `sessionStorage`. This forces a re-query on the next request to resolve a supported model automatically.
 *   **Graceful Recovery**: Handles errors like invalid keys (`403`), rate limit exhaustion (`429`), and backend server failures (`500+`) with user-friendly alerts, suggesting actionable next steps.
 
 ---
@@ -710,7 +710,7 @@ The application uses local validations to catch errors early, preventing unneces
 *   **Root Cause**: Storing large, uncompressed files as base64 strings in local storage consumes significant memory and quickly exhausts the 5MB browser quota.
 *   **Lesson Learned**: Local storage is a temporary solution for Phase 1. The Phase 2 roadmap prioritizes moving file storage to AWS S3, storing only secure URL paths in the database.
 
-### 13.3 Gemini API Model Deprecations
+### 13.3 Groq API Model Deprecations
 *   **Issue**: Hardcoded model names in API requests caused errors when those specific models were deprecated by Google.
 *   **Resolution**: Implemented dynamic model resolution. The application queries the `listModels` endpoint using the user's API key to identify accessible models. It then cross-references this list with a local preference configuration to select the best available option.
 

@@ -18,7 +18,7 @@ import {
   getChatHistory, saveChatHistory, clearChatHistory,
   getSuggestedQuestions, verifyApiKey,
   getSelectedModel, setSelectedModel, getAvailableModels,
-} from '../services/geminiService';
+} from '../services/groqService';
 import Navbar from '../components/layout/Navbar/Navbar';
 import Sidebar from '../components/layout/Sidebar/Sidebar';
 import Button from '../components/common/Button/Button';
@@ -199,7 +199,7 @@ function InsightCard({ children, severity, style }) {
 function AnalysisSkeleton({ step }) {
   const steps = [
     'Preparing document...',
-    'Sending to Gemini 1.5 Flash...',
+    'Sending to Groq 1.5 Flash...',
     'Running deep analysis...',
     'Parsing results...',
     'Done!',
@@ -211,7 +211,7 @@ function AnalysisSkeleton({ step }) {
       </div>
       <p className="ai-skeleton-step">{step?.label || 'Analysing document...'}</p>
       <p className="ai-skeleton-hint">
-        Gemini is performing a comprehensive analysis — extracting all sections, entities, dates, and risks.
+        Groq is performing a comprehensive analysis — extracting all sections, entities, dates, and risks.
         This takes 10–30 seconds for complex documents.
       </p>
       <div className="ai-skeleton-bars">
@@ -905,7 +905,7 @@ export default function DocumentAI() {
                 <h3>Select a document to analyse</h3>
                 <p>
                   Choose any document from your Vault or Sign Documents.
-                  Gemini 1.5 Flash will perform a deep, section-by-section analysis —
+                  Groq 1.5 Flash will perform a deep, section-by-section analysis —
                   extracting all dates, obligations, risks, benefits, and legal restrictions
                   with source citations.
                 </p>

@@ -55,7 +55,7 @@ The application is classified as an **AI-powered Career Document Management Plat
 *   🔒 **Document Vault:** Secure storage, listing, and organization of career-related documents.
 *   🎓 **Certificate Management:** Uploading, organizing, and verifying certificates and credentials.
 *   ✍️ **Digital Signature:** Local preparation, drawing, and embedding of digital signatures into documents.
-*   🤖 **AI Document Analysis:** Intelligent parsing, summaries, and suggestions for resumes and documents powered by the Gemini API.
+*   🤖 **AI Document Analysis:** Intelligent parsing, summaries, and suggestions for resumes and documents powered by the Groq Cloud API.
 *   📂 **Document Organization:** Category filtering, search capabilities, and tag association.
 *   💼 **Career Management:** Tracking job applications, documents, and overall career progression assets.
 
@@ -87,7 +87,7 @@ The application's current frontend stack relies on modern React ecosystem utilit
 *   **File Interactions:** React Dropzone
 *   **Signature Canvas:** React Signature Canvas
 *   **Icon Library:** Lucide React
-*   **Artificial Intelligence:** Google Gemini API (integrated via custom service layer)
+*   **Artificial Intelligence:** Groq Cloud API (integrated via custom service layer supporting Llama & Mixtral models)
 
 ### 5. Build System
 
@@ -240,3 +240,4 @@ These items are mapped to guide development in subsequent phases of the project:
 | Version | Date | Author | Changes |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-06-29 | Preeti Tewatia | Initial repository overview |
+| 1.1.0 | 2026-06-30 | Preeti Tewatia | Migrated AI engine to Groq Cloud API, resolved PDF loop, and added signature customizer |
