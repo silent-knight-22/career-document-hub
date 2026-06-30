@@ -5,7 +5,7 @@ import {
   Calendar, DollarSign, Users, Shield, Zap, Clock,
   BookOpen, Archive, RefreshCw, Copy, ChevronDown,
   ChevronUp, Flag, Hash, Briefcase, Lock, Info,
-  AlertCircle, ArrowRight, X, CheckCheck, Loader2
+  AlertCircle, ArrowRight, X, CheckCheck, Loader2, Download
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -239,9 +239,47 @@ function SummaryTab({ analysis }) {
   const [copiedSummary, setCopied] = useState(false);
 
   const handleCopy = () => {
-    copyToClipboard(analysis.executive_summary || '');
+    if (typeof copyToClipboard === 'function') {
+      copyToClipboard(analysis.executive_summary || '');
+    } else {
+      navigator.clipboard.writeText(analysis.executive_summary || '');
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleExport = () => {
+    let md = `# AI Analysis Summary - ${analysis.document_type || 'Document'}\n\n`;
+    if (analysis.entities?.document_date) md += `**Document Date:** ${analysis.entities.document_date}\n`;
+    if (analysis.entities?.governing_law) md += `**Governing Law:** ${analysis.entities.governing_law}\n`;
+    md += `\n## Executive Summary\n\n${analysis.executive_summary || ''}\n\n`;
+    
+    if (analysis.sections?.length > 0) {
+      md += `## Section-Wise Analysis\n\n`;
+      analysis.sections.forEach((sec, idx) => {
+        md += `### ${idx + 1}. ${sec.title} ${sec.page_ref ? `(${sec.page_ref})` : ''}\n\n${sec.summary}\n\n`;
+      });
+    }
+
+    if (analysis.key_points?.length > 0) {
+      md += `## Key Points\n\n`;
+      analysis.key_points.forEach(kp => {
+        const point = typeof kp === 'string' ? kp : kp.point;
+        const imp = typeof kp === 'object' ? ` [Importance: ${kp.importance}]` : '';
+        md += `* ${point}${imp}\n`;
+      });
+    }
+
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(analysis.document_type || 'Summary').toLowerCase().replace(/\s+/g, '_')}_summary.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Summary exported as Markdown!');
   };
 
   return (
@@ -268,9 +306,14 @@ function SummaryTab({ analysis }) {
       <div className="ai-summary-card">
         <div className="ai-summary-header">
           <h3><Sparkles size={16} /> Executive Summary</h3>
-          <button className="ai-copy-btn" onClick={handleCopy} title="Copy">
-            {copiedSummary ? <CheckCheck size={14} /> : <Copy size={14} />}
-          </button>
+          <div className="ai-summary-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="ai-copy-btn" onClick={handleCopy} title="Copy Summary">
+              {copiedSummary ? <CheckCheck size={14} /> : <Copy size={14} />}
+            </button>
+            <button className="ai-copy-btn" onClick={handleExport} title="Export Summary (Markdown)">
+              <Download size={14} />
+            </button>
+          </div>
         </div>
         <div className="ai-summary-body">
           {(analysis.executive_summary || 'No summary available.').split('\n\n').map((p, i) => (

@@ -52,8 +52,12 @@ export const setAvailableModels = (models) => {
   localStorage.setItem(AVAILABLE_MODELS_KEY, JSON.stringify(models));
 };
 
+// Pre-fill with a default key if desired (e.g. gsk_...)
+// If set, this key will act as a fallback so users do not have to provide their own.
+const DEFAULT_API_KEY = "";
+
 // ── API Key helpers ───────────────────────────────────────────
-export const getApiKey   = ()  => localStorage.getItem(KEY_STORAGE) || '';
+export const getApiKey   = ()  => localStorage.getItem(KEY_STORAGE) || DEFAULT_API_KEY || '';
 export const setApiKey   = (k) => { localStorage.setItem(KEY_STORAGE, k.trim()); clearSessionModel(); };
 export const clearApiKey = ()  => { localStorage.removeItem(KEY_STORAGE); clearSessionModel(); };
 export const hasApiKey   = ()  => !!getApiKey();
@@ -568,7 +572,8 @@ ANSWERING RULES:
 3. If multiple sections are relevant, cite all of them.
 4. If information is not in the analysis, say exactly: "This information was not found in the document."
 5. Use bullet points for lists of items.
-6. For legal or financial information, reproduce the exact wording from the analysis.`
+6. For legal or financial information, reproduce the exact wording from the analysis.
+7. OUT-OF-CONTEXT RULE: If the user asks a question that is completely unrelated to the uploaded document, career documents, or the analysis context provided (such as asking for recipes, coding help, advice on unrelated hobbies, weather, or jokes), do NOT answer it. Instead, respond with a witty, funny, or slightly sarcastic reply in a friendly, helpful AI persona, reminding them that you are a Career Document Assistant and they should stick to the document. Be creative and generate a different funny response each time. Do NOT include the "📍 Source" citation for out-of-context questions.`
   };
 
   const historyTurns = chatHistory.flatMap((h) => [
