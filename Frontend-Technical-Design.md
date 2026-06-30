@@ -441,10 +441,8 @@ graph TD
     Groq[Groq Cloud API]
     
     User -->|1. Enter Credentials / Forms / Files| UI
-    UI -->|2. Save Data & Documents| LS
-    LS -->|3. Retrieve Cached Files & Session| UI
-    UI -->|4. Base64 Documents & Prompts| Groq
-    Groq -->|5. Structured JSON & Answers| UI
+    UI <-->|2. Save Data / 3. Retrieve Cache & Session| LS
+    UI <-->|4. Base64 Docs & Prompts / 5. Structured JSON & Answers| Groq
     UI -->|6. Render PDF Downloads & AI Insights| User
 ```
 
