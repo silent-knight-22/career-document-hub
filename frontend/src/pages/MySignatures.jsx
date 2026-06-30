@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Signature, Plus, Download, Trash2, Star, Clock, PenLine } from 'lucide-react';
+import { Signature, Plus, Trash2, PenLine } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -10,10 +10,8 @@ import Navbar from '../components/layout/Navbar/Navbar';
 import Sidebar from '../components/layout/Sidebar/Sidebar';
 import Button from '../components/common/Button/Button';
 import Modal from '../components/common/Modal/Modal';
+import SignatureCard from '../components/signature/SignatureCard';
 import './MySignatures.css';
-
-const TYPE_LABELS = { draw: 'Drawn', upload: 'Uploaded', type: 'Typed' };
-const TYPE_COLORS = { draw: '#6366f1', upload: '#3b82f6', type: '#10b981' };
 
 export default function MySignatures() {
   const { user } = useAuth();
@@ -76,64 +74,13 @@ export default function MySignatures() {
           ) : (
             <div className="signatures-grid stagger-children">
               {signatures.map((sig) => (
-                <div key={sig.id} className="sig-card card hover-lift animate-fade-in-up">
-                  {sig.isDefault && (
-                    <div className="sig-default-badge">
-                      <Star size={11} fill="currentColor" /> Default
-                    </div>
-                  )}
-
-                  <div className="sig-preview-area">
-                    <img src={sig.dataUrl} alt={sig.name} />
-                  </div>
-
-                  <div className="sig-card-body">
-                    <div className="sig-card-info">
-                      <p className="sig-name">{sig.name}</p>
-                      <div className="sig-meta">
-                        <span
-                          className="badge"
-                          style={{
-                            background: `${TYPE_COLORS[sig.type]}18`,
-                            color: TYPE_COLORS[sig.type],
-                          }}
-                        >
-                          {TYPE_LABELS[sig.type] || sig.type}
-                        </span>
-                        <span className="sig-date">
-                          <Clock size={11} />
-                          {new Date(sig.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="sig-card-actions">
-                      {!sig.isDefault && (
-                        <button
-                          className="sig-action-btn"
-                          onClick={() => handleSetDefault(sig)}
-                          title="Set as default"
-                        >
-                          <Star size={15} />
-                        </button>
-                      )}
-                      <button
-                        className="sig-action-btn"
-                        onClick={() => handleDownload(sig)}
-                        title="Download"
-                      >
-                        <Download size={15} />
-                      </button>
-                      <button
-                        className="sig-action-btn danger"
-                        onClick={() => setDeleteTarget(sig)}
-                        title="Delete"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <SignatureCard
+                  key={sig.id}
+                  sig={sig}
+                  onSetDefault={handleSetDefault}
+                  onDownload={handleDownload}
+                  onDelete={setDeleteTarget}
+                />
               ))}
 
               {/* Add new card */}

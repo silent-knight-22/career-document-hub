@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, Mail, Lock, User, Signature } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { registerUser } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
@@ -10,31 +10,8 @@ import Button from '../../components/common/Button/Button';
 import ThemeToggle from '../../components/common/ThemeToggle/ThemeToggle';
 import './Auth.css';
 
-function PasswordStrength({ password }) {
-  const getStrength = (p) => {
-    if (!p) return 0;
-    let s = 0;
-    if (p.length >= 8)           s++;
-    if (/[A-Z]/.test(p))         s++;
-    if (/[0-9]/.test(p))         s++;
-    if (/[^A-Za-z0-9]/.test(p))  s++;
-    return s;
-  };
-  const strength = getStrength(password);
-  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const colors = ['', '#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
-  if (!password) return null;
-  return (
-    <div className="password-strength">
-      <div className="strength-bars">
-        {[1,2,3,4].map((i) => (
-          <div key={i} className="strength-bar" style={{ background: i <= strength ? colors[strength] : 'var(--bg-tertiary)' }} />
-        ))}
-      </div>
-      <span style={{ color: colors[strength], fontSize: '0.75rem', fontWeight: 600 }}>{labels[strength]}</span>
-    </div>
-  );
-}
+import PasswordStrength from '../../components/auth/PasswordStrength';
+import AuthHeader from '../../components/auth/AuthHeader';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -75,15 +52,10 @@ export default function Register() {
       </div>
 
       <div className="auth-card animate-scale-in">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">
-            <Signature size={22} color="white" />
-          </div>
-          <span className="auth-logo-text">Career Doc Hub</span>
-        </div>
-
-        <h2 className="auth-title">Create your account</h2>
-        <p className="auth-subtitle">Your all-in-one career document workspace — free forever</p>
+        <AuthHeader
+          title="Create your account"
+          subtitle="Your all-in-one career document workspace — free forever"
+        />
 
         <form onSubmit={handleSubmit(onSubmit)} className="auth-form" noValidate>
           <Input
@@ -152,7 +124,6 @@ export default function Register() {
               validate: (v) => v === password || 'Passwords do not match',
             })}
           />
-
           <label className="auth-checkbox" style={{ marginTop: '0.25rem' }}>
             <input type="checkbox" {...register('terms', { required: 'You must accept the terms' })} />
             <span>
@@ -163,12 +134,10 @@ export default function Register() {
             </span>
           </label>
           {errors.terms && <span style={{ fontSize: '0.8rem', color: 'var(--color-error)' }}>{errors.terms.message}</span>}
-
           <Button type="submit" fullWidth loading={loading} size="lg">
             Create Account
           </Button>
         </form>
-
         <div className="auth-footer">
           Already have an account?{' '}
           <Link to="/login">Sign in</Link>

@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
-  PenLine, FileText, Signature, TrendingUp,
-  Clock, CheckCircle, Plus, ArrowRight
+  PenLine, FileText, Signature, TrendingUp, CheckCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getSignatures } from '../services/signatureService';
@@ -9,22 +8,10 @@ import { getDocuments, getDocumentStats } from '../services/documentService';
 import Navbar from '../components/layout/Navbar/Navbar';
 import Sidebar from '../components/layout/Sidebar/Sidebar';
 import Button from '../components/common/Button/Button';
+import StatCard from '../components/dashboard/StatCard';
+import RecentSignatures from '../components/dashboard/RecentSignatures';
+import RecentDocuments from '../components/dashboard/RecentDocuments';
 import './Dashboard.css';
-
-function StatCard({ icon: Icon, label, value, color, trend }) {
-  return (
-    <div className={`stat-card hover-lift animate-fade-in-up`}>
-      <div className="stat-card-icon" style={{ background: color }}>
-        <Icon size={20} color="white" />
-      </div>
-      <div className="stat-card-content">
-        <p className="stat-card-label">{label}</p>
-        <h3 className="stat-card-value">{value}</h3>
-        {trend && <p className="stat-card-trend">{trend}</p>}
-      </div>
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -97,93 +84,8 @@ export default function Dashboard() {
 
           {/* Recent Activity */}
           <div className="dashboard-grid">
-
-            {/* Recent Signatures */}
-            <div className="card animate-fade-in-up">
-              <div className="card-header">
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Signature size={18} style={{ color: 'var(--brand-primary)' }} />
-                  Recent Signatures
-                </h3>
-                <Link to="/signatures">
-                  <Button variant="ghost" size="sm" icon={ArrowRight}>View all</Button>
-                </Link>
-              </div>
-              <div className="card-body">
-                {recentSigs.length === 0 ? (
-                  <div className="empty-state" style={{ padding: '2rem' }}>
-                    <div className="empty-state-icon"><Signature size={28} /></div>
-                    <h3>No signatures yet</h3>
-                    <p>Create your first digital signature</p>
-                    <Link to="/signatures/create">
-                      <Button variant="outline" size="sm" icon={Plus}>Create Signature</Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="recent-list">
-                    {recentSigs.map((sig) => (
-                      <div key={sig.id} className="recent-item">
-                        <div className="recent-sig-preview">
-                          <img src={sig.dataUrl} alt={sig.name} />
-                        </div>
-                        <div className="recent-item-info">
-                          <p className="recent-item-name">{sig.name}</p>
-                          <p className="recent-item-meta">
-                            <Clock size={11} /> {new Date(sig.createdAt).toLocaleDateString()}
-                            {sig.isDefault && <span className="badge badge-primary" style={{ marginLeft: '0.5rem' }}>Default</span>}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Recent Documents */}
-            <div className="card animate-fade-in-up" style={{ animationDelay: '60ms' }}>
-              <div className="card-header">
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <FileText size={18} style={{ color: 'var(--brand-primary)' }} />
-                  Recent Documents
-                </h3>
-                <Link to="/documents">
-                  <Button variant="ghost" size="sm" icon={ArrowRight}>View all</Button>
-                </Link>
-              </div>
-              <div className="card-body">
-                {recentDocs.length === 0 ? (
-                  <div className="empty-state" style={{ padding: '2rem' }}>
-                    <div className="empty-state-icon"><FileText size={28} /></div>
-                    <h3>No documents yet</h3>
-                    <p>Upload a document to sign it digitally</p>
-                    <Link to="/documents">
-                      <Button variant="outline" size="sm" icon={Plus}>Upload Document</Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="recent-list">
-                    {recentDocs.map((doc) => (
-                      <div key={doc.id} className="recent-item">
-                        <div className="recent-doc-icon">
-                          <FileText size={18} />
-                        </div>
-                        <div className="recent-item-info">
-                          <p className="recent-item-name">{doc.name}</p>
-                          <p className="recent-item-meta">
-                            <Clock size={11} /> {new Date(doc.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <span className={`badge ${doc.signed ? 'badge-success' : 'badge-warning'}`}>
-                          {doc.signed ? 'Signed' : 'Pending'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
+            <RecentSignatures recentSigs={recentSigs} />
+            <RecentDocuments recentDocs={recentDocs} />
           </div>
 
           {/* Quick Actions */}
