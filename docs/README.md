@@ -8,7 +8,7 @@ Welcome to the documentation suite for the **Career Document Hub**. This folder 
 
 ### 🔍 Repository Audit (Phase 1)
 *   **[01 Repository Overview](file:///C:/Users/preeti.tewatia/.gemini/antigravity/scratch/career-document-hub/docs/audit/01_REPOSITORY_OVERVIEW.md)**: Conceptual summary, tech stack, and high-level DFDs.
-*   *02 Folder Structure*: Breakdown of relocated subdirectories. *(Placeholder)*
+*   **[02 Folder Structure](file:///C:/Users/preeti.tewatia/.gemini/antigravity/scratch/career-document-hub/docs/audit/02_FOLDER_STRUCTURE.md)**: Breakdown of relocated subdirectories.
 *   *03 Component Audit*: Detail on decomposed React elements. *(Placeholder)*
 *   *04 Page Audit*: State and rendering logic for each route view. *(Placeholder)*
 *   *05 Service Layer*: Persistence API and Groq Cloud connection specs. *(Placeholder)*
