@@ -11,7 +11,7 @@ This document provides a comprehensive technical blueprint of the frontend archi
 *   **Routing**: React Router DOM v6 (declarative browser routing, nested layout route nesting, and protective guard wrappers).
 *   **Styling**: Vanilla CSS (enhanced with CSS custom properties/variables to enable theme switching).
 *   **Toast System**: `react-hot-toast` (dynamic, responsive notifications synchronized with theme contexts).
-*   **AI Integration**: Direct HTTPS requests using Fetch API against Google Generative AI beta endpoints.
+*   **AI Integration**: Direct HTTPS requests using Fetch API against Groq Cloud completions endpoints.
 *   **State & Cache Layers**: React Context API coupled with raw browser storage APIs (`localStorage` and `sessionStorage`).
 
 ---
@@ -75,7 +75,7 @@ graph TD
     end
     
     subgraph External Services
-        GroqAPI[Google Generative Language API]
+        GroqAPI[Groq Cloud REST API]
     end
 
     User --> App
@@ -143,63 +143,69 @@ graph LR
     UserState --> StorageAPI
     ThemeState --> UI
     StorageAPI --> NetworkAPI
-    NetworkAPI --> GroqAPI[Google APIs]
+    NetworkAPI --> GroqAPI[Groq API]
 ```
 
 ---
 
 ## 3. Folder Structure
 
-The code directory is structured to separate views, routing definitions, global providers, services, and reusable presentation code:
+The code directory is structured inside the `frontend/` folder, separating views, routing definitions, providers, custom state hooks, and persistence adapters:
 
-```
-src/
+```text
+frontend/src/
 ├── assets/             # Static images, logo vectors, and base graphic assets
 ├── components/         # Reusable presentation and layout components
-│   ├── common/         # Atomic UI components (custom buttons, fields, badge tags)
-│   └── layout/         # Shared structure frameworks
-│       ├── Navbar/     # Top header bar (displays route titles and active profile buttons)
-│       │   ├── Navbar.jsx
-│       │   └── Navbar.css
-│       ├── ProtectedRoute/ # Route wrap wrapper ensuring session validity
-│       │   └── ProtectedRoute.jsx
-│       └── Sidebar/    # Persistent navigation bar with responsive configurations
-│           ├── Sidebar.jsx
-│           └── Sidebar.css
+│   ├── auth/           # AuthHeader, PasswordStrength components
+│   ├── certificates/   # AddCertModal, CertCard components
+│   ├── common/         # Custom modular Buttons, Inputs, Modals, and ThemeToggle
+│   ├── dashboard/      # RecentDocuments, RecentSignatures, StatCard components
+│   ├── documentAI/     # Setup panels, modal configurations, ChatTab, SummaryTab views
+│   │   └── insights/   # RedFlagsAndRisks, ObligationsAndRules, DatesAndFinances
+│   ├── documents/      # Signature overlays, canvas backgrounds, upload drops
+│   ├── expiry/         # Expiry alert rows
+│   ├── layout/         # Header Navbar, Sidebar navigation, and Route guards
+│   ├── profile/        # Account details and cache/database deletion dialogs
+│   ├── resume/         # Resume builder inputs structure grids and layout previews
+│   └── signature/      # Preset grids, custom lettering styles, upload selectors
 ├── context/            # Shared React context files managing global state
 │   ├── AuthContext.jsx # Handles user verification and profile syncing
 │   └── ThemeContext.jsx# Handles light, dark, and system color settings
-├── pages/              # Full page view containers bound to routes
-│   ├── auth/           # Authentication layouts
-│   │   ├── Auth.css
-│   │   ├── ForgotPassword.jsx
-│   │   ├── Login.jsx
-│   │   └── Register.jsx
-│   ├── Certificates.css/.jsx  # Certificate repository upload and views
-│   ├── CreateSignature.css/.jsx # Signature designer (canvas & styled text fields)
-│   ├── Dashboard.css/.jsx     # System dashboard displaying stats and checklist items
-│   ├── DocumentAI.css/.jsx    # Groq analytical setup and chat interface
-│   ├── Documents.css/.jsx     # Repository of signed/unsigned PDFs
-│   ├── Expiry.css/.jsx        # Tracking center displaying upcoming expiration dates
-│   ├── MySignatures.css/.jsx  # List of signatures with option to select a default
-│   ├── Profile.css/.jsx       # Form updating user details and clearing cache
-│   ├── Resume.css/.jsx        # Dual-panel resume entry and print preview
-│   ├── SignDocument.css/.jsx  # PDF signer interface using overlay canvases
-│   └── Vault.css/.jsx         # Structured folder vault and search system
+├── hooks/              # Custom hooks encapsulating component state & behaviors
+│   ├── useChatState.js       # Coordinates conversations chat turns and suggested questions
+│   ├── useDocumentAIState.js # Tracks active analysis steps and Groq verification states
+│   ├── useDocumentUpload.js  # Implements type checks and base64 parsing size guards
+│   ├── usePdfRenderer.js     # Extracts pages text and translates first page to images
+│   ├── useResumeState.js     # Drives form lists additions, prints, and debounced saves
+│   └── useSignatureCanvas.js # Manages drawing coordinates and brush variables
+├── pages/              # Clean modular page containers (under 150 lines)
+│   ├── auth/           # Login, Register, ForgotPassword
+│   ├── Certificates.jsx
+│   ├── CreateSignature.jsx
+│   ├── Dashboard.jsx
+│   ├── DocumentAI.jsx
+│   ├── Documents.jsx
+│   ├── Expiry.jsx
+│   ├── MySignatures.jsx
+│   ├── Profile.jsx
+│   ├── Resume.jsx
+│   ├── SignDocument.jsx
+│   └── Vault.jsx
 ├── routes/             # Client routing mapping configurations
 │   └── AppRoutes.jsx   # Declares public and protected routes
-├── services/           # Modules that isolate data operations from UI components
-│   ├── authService.js         # Manages registration, logins, and profile updates
-│   ├── certificateService.js  # Manages certificate CRUD operations
-│   ├── documentService.js     # Manages signed/unsigned file states
-│   ├── groqService.js       # Manages Groq model resolution, parsing, and chat history
-│   ├── resumeService.js       # Manages resume draft saving and structures
-│   ├── signatureService.js    # Manages drawn or uploaded signatures
-│   └── vaultService.js        # Manages vault metadata classifications
-├── styles/             # Application variables and reset structures
+├── services/           # Services isolating localStorage & Groq APIs from UI views
+│   ├── authService.js
+│   ├── certificateService.js
+│   ├── documentService.js
+│   ├── groqService.js  # Verified Mock / Actual Groq Cloud API adapter
+│   ├── resumeService.js
+│   ├── signatureService.js
+│   └── vaultService.js
+├── styles/             # CSS variable sets and normalization properties
+├── utils/              # Signature merger and drawing utility algorithms
 ├── App.css             # Main styling rules and layout utilities
 ├── App.jsx             # Root layout wrapping Context Providers
-├── index.css           # CSS variables defining theme options
+├── index.css           # Global theme styling custom variables
 └── main.jsx            # Mounts React to the DOM
 ```
 
@@ -432,7 +438,7 @@ graph TD
         LS[(Browser Local Storage)]
     end
     
-    Groq[Google Groq API]
+    Groq[Groq Cloud API]
     
     User -->|1. Enter Credentials / Forms / Files| UI
     UI -->|2. Save Data & Documents| LS
@@ -658,7 +664,7 @@ sequenceDiagram
     actor User
     participant UI as Document AI Setup Panel
     participant Svc as groqService.js
-    participant API as Google Groq listModels API
+    participant API as Groq Cloud models API
 
     User->>UI: Enter API Key and click Verify
     UI->>Svc: Call verifyApiKey(key)
@@ -711,7 +717,7 @@ The application uses local validations to catch errors early, preventing unneces
 *   **Lesson Learned**: Local storage is a temporary solution for Phase 1. The Phase 2 roadmap prioritizes moving file storage to AWS S3, storing only secure URL paths in the database.
 
 ### 13.3 Groq API Model Deprecations
-*   **Issue**: Hardcoded model names in API requests caused errors when those specific models were deprecated by Google.
+*   **Issue**: Hardcoded model names in API requests caused errors when those specific models were deprecated.
 *   **Resolution**: Implemented dynamic model resolution. The application queries the `listModels` endpoint using the user's API key to identify accessible models. It then cross-references this list with a local preference configuration to select the best available option.
 
 ---

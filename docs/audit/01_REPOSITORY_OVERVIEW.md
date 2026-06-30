@@ -91,7 +91,7 @@ The application's current frontend stack relies on modern React ecosystem utilit
 
 ### 5. Build System
 
-The build system utilizes **Vite**, offering a fast and modern frontend developer experience.
+The build system utilizes **Vite**, offering a fast and modern frontend developer experience. Note that all build scripts must be executed inside the `frontend/` subdirectory:
 
 | Script Command | Purpose |
 | :--- | :--- |
@@ -106,17 +106,21 @@ The codebase is organized in a highly clean and modular pattern:
 
 ```text
 career-document-hub/
-├── public/                 # Static public assets (logos, icons, external scripts)
-├── src/
-│   ├── assets/             # Global visual assets, images, and fonts
-│   ├── components/         # Reusable, stateless or UI-only components (buttons, modals)
-│   ├── context/            # React Context providers representing domain-specific states
-│   ├── pages/              # Composite layout views corresponding to routes (Dashboard, Vault, etc.)
-│   ├── routes/             # Client-side router declarations and route guards
-│   ├── services/           # Services encapsulating localStorage, Gemini API, and business logic
-│   └── styles/             # Global stylesheets and CSS variables
-├── package.json            # NPM dependencies and script definitions
-├── vite.config.js          # Vite bundler configurations
+├── frontend/               # Relocated Frontend React Application
+│   ├── public/             # Static public assets (logos, icons, external scripts)
+│   ├── src/
+│   │   ├── assets/         # Global visual assets, images, and fonts
+│   │   ├── components/     # Decomposed atomic UI components (buttons, modals, sections)
+│   │   ├── context/        # React Context providers representing domain-specific states
+│   │   ├── hooks/          # Custom React hooks (useResumeState, useChatState, useDocumentAIState)
+│   │   ├── pages/          # Modular route layout pages (strictly under 150 lines)
+│   │   ├── routes/         # Client-side router declarations and route guards
+│   │   ├── services/       # Services encapsulating local storage & Groq API adapters
+│   │   ├── styles/         # Global stylesheets and CSS variables
+│   │   └── utils/          # Auxiliary helper algorithms (signatureMerger)
+│   ├── package.json        # NPM dependencies and script definitions
+│   └── vite.config.js      # Vite bundler configurations
+├── docs/                   # Documentation and repository audit audits
 ├── README.md               # Standard development quickstart guide
 ├── PRD.md                  # Product Requirements Document
 └── Frontend-Technical-Design.md # Technical implementation details
