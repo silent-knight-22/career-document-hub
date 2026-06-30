@@ -18,10 +18,36 @@ const TABS = [
   { id: 'type',   icon: Type,    label: 'Type' },
 ];
 
-const TYPE_FONTS = [
-  { label: 'Dancing Script', value: "'Dancing Script', cursive" },
-  { label: 'Pacifico',       value: "'Pacifico', cursive" },
-  { label: 'Satisfy',        value: "'Satisfy', cursive" },
+const PRESETS = [
+  { id: 'p1', label: 'Classic Ink', value: "'Dancing Script', cursive", color: '#000000' },
+  { id: 'p2', label: 'Royal Quill', value: "'Pacifico', cursive",       color: '#002fbe' },
+  { id: 'p3', label: 'Modern Violet', value: "'Satisfy', cursive",      color: '#6366f1' },
+  { id: 'p4', label: 'Elegant Brush', value: "'Alex Brush', cursive",   color: '#0d9488' },
+  { id: 'p5', label: 'Midnight Calli', value: "'Great Vibes', cursive",  color: '#0f172a' },
+  { id: 'p6', label: 'Slender Fountain', value: "'Sacramento', cursive",color: '#831843' },
+];
+
+const CUSTOM_FONTS = [
+  { label: 'Dancing Script (Playful)', value: "'Dancing Script', cursive" },
+  { label: 'Pacifico (Bold Quill)', value: "'Pacifico', cursive" },
+  { label: 'Satisfy (Modern Violet)', value: "'Satisfy', cursive" },
+  { label: 'Alex Brush (Elegant)', value: "'Alex Brush', cursive" },
+  { label: 'Great Vibes (Midnight)', value: "'Great Vibes', cursive" },
+  { label: 'Allura (Graceful)', value: "'Allura', cursive" },
+  { label: 'Arizonia (Expressive)', value: "'Arizonia', cursive" },
+  { label: 'Pinyon Script (Vintage)', value: "'Pinyon Script', cursive" },
+  { label: 'Sacramento (Fountain)', value: "'Sacramento', cursive" },
+  { label: 'Mrs Saint Delafield (Classic)', value: "'Mrs Saint Delafield', cursive" },
+  { label: 'Monsieur La Doulaise (Antique)', value: "'Monsieur La Doulaise', cursive" },
+];
+
+const INK_COLORS = [
+  { label: 'Classic Black', value: '#000000' },
+  { label: 'Midnight Blue', value: '#0f172a' },
+  { label: 'Royal Blue',    value: '#002fbe' },
+  { label: 'Violet Ink',    value: '#6366f1' },
+  { label: 'Emerald Green', value: '#0d9488' },
+  { label: 'Dark Red',      value: '#b91c1c' },
 ];
 
 // ---- Draw Tab ----
@@ -143,9 +169,15 @@ function UploadTab({ onSave }) {
 
 // ---- Type Tab ----
 function TypeTab({ onSave }) {
-  const [text, setText]     = useState('');
-  const [font, setFont]     = useState(TYPE_FONTS[0].value);
-  const canvasRef           = useRef(null);
+  const [text, setText] = useState('');
+  
+  // Customizer state
+  const [selectedFont, setSelectedFont]   = useState(CUSTOM_FONTS[0].value);
+  const [selectedColor, setSelectedColor] = useState('#000000'); // defaults to black
+  const [fontSize, setFontSize]           = useState(52);
+  const [fontWeight, setFontWeight]       = useState('normal'); // 'normal' | 'bold'
+  
+  const canvasRef = useRef(null);
 
   const generateSignature = () => {
     const canvas  = canvasRef.current;
@@ -153,8 +185,8 @@ function TypeTab({ onSave }) {
     canvas.width  = 500;
     canvas.height = 120;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font      = `52px ${font}`;
-    ctx.fillStyle = '#1e293b';
+    ctx.font      = `${fontWeight} ${fontSize}px ${selectedFont}`;
+    ctx.fillStyle = selectedColor;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, canvas.width / 2, canvas.height / 2);
@@ -167,41 +199,153 @@ function TypeTab({ onSave }) {
     onSave(dataUrl, 'type');
   };
 
+  const handleSelectPreset = (preset) => {
+    setSelectedFont(preset.value);
+    setSelectedColor(preset.color);
+    setFontSize(52);
+    setFontWeight('normal');
+    toast.success(`Loaded preset: ${preset.label}`);
+  };
+
   return (
     <div className="tab-content">
       <Input
         label="Type your name"
         id="type-name"
-        placeholder="Your full name"
+        placeholder="Enter your name to generate signatures"
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
 
-      <div className="font-picker">
-        <label className="draw-tool-label">Choose style</label>
-        <div className="font-options">
-          {TYPE_FONTS.map((f) => (
-            <button
-              key={f.value}
-              className={`font-option ${font === f.value ? 'active' : ''}`}
-              style={{ fontFamily: f.value }}
-              onClick={() => setFont(f.value)}
-            >
-              {text || 'Your Name'}
-            </button>
-          ))}
+      {/* 6 Quick Presets */}
+      <div className="font-picker-container" style={{ marginTop: '1.25rem' }}>
+        <label className="draw-tool-label">Quick Style Presets</label>
+        <div className="signature-style-grid">
+          {PRESETS.map((p) => {
+            const isPresetActive = selectedFont === p.value && selectedColor === p.color;
+            return (
+              <div
+                key={p.id}
+                className={`sig-style-card ${isPresetActive ? 'active' : ''}`}
+                onClick={() => handleSelectPreset(p)}
+              >
+                <div className="sig-style-header">
+                  <span className="sig-style-name">{p.label}</span>
+                  {isPresetActive && <span className="sig-style-badge">Preset Loaded</span>}
+                </div>
+                <div className="sig-style-preview">
+                  <p style={{ fontFamily: p.value, color: p.color, fontSize: '1.75rem' }}>
+                    {text || 'Signature'}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
+      {/* Customizer Controls Panel */}
+      <div className="sig-customizer-panel">
+        <h4 className="customizer-title">Style Customizer</h4>
+        
+        <div className="customizer-row">
+          {/* Cursive Font Selection Dropdown */}
+          <div className="customizer-col">
+            <label className="customizer-label">Signature Font</label>
+            <select
+              className="customizer-select"
+              value={selectedFont}
+              onChange={(e) => setSelectedFont(e.target.value)}
+            >
+              {CUSTOM_FONTS.map(font => (
+                <option key={font.value} value={font.value}>{font.label}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Font Weight Button Group */}
+          <div className="customizer-col">
+            <label className="customizer-label">Font Weight</label>
+            <div className="weight-toggle-group">
+              <button
+                className={`weight-toggle-btn ${fontWeight === 'normal' ? 'active' : ''}`}
+                onClick={() => setFontWeight('normal')}
+              >
+                Normal
+              </button>
+              <button
+                className={`weight-toggle-btn ${fontWeight === 'bold' ? 'active' : ''}`}
+                onClick={() => setFontWeight('bold')}
+              >
+                Bold
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="customizer-row" style={{ marginTop: '1.25rem' }}>
+          {/* Font Size Slider */}
+          <div className="customizer-col">
+            <label className="customizer-label">Font Size ({fontSize}px)</label>
+            <input
+              type="range"
+              min="32"
+              max="72"
+              className="customizer-slider"
+              value={fontSize}
+              onChange={(e) => setFontSize(parseInt(e.target.value))}
+            />
+          </div>
+          
+          {/* Ink Color Selector */}
+          <div className="customizer-col">
+            <label className="customizer-label">Ink Color</label>
+            <div className="ink-color-selector">
+              {INK_COLORS.map(c => (
+                <button
+                  key={c.value}
+                  className={`ink-color-dot ${selectedColor === c.value ? 'active' : ''}`}
+                  style={{ backgroundColor: c.value }}
+                  title={c.label}
+                  onClick={() => setSelectedColor(c.value)}
+                />
+              ))}
+              {/* Custom Color Input */}
+              <div className="custom-color-picker-wrapper">
+                <input
+                  type="color"
+                  className="custom-color-picker-input"
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  title="Choose custom color"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Live Customizer Preview Box */}
       {text && (
-        <div className="type-preview">
-          <p style={{ fontFamily: font, fontSize: '2.5rem', color: '#1e293b' }}>{text}</p>
+        <div className="custom-sig-live-preview">
+          <div className="preview-label">Live Preview</div>
+          <div className="preview-box">
+            <p style={{
+              fontFamily: selectedFont,
+              color: selectedColor,
+              fontSize: `${fontSize}px`,
+              fontWeight: fontWeight,
+              lineHeight: 1
+            }}>
+              {text}
+            </p>
+          </div>
         </div>
       )}
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      <div className="tab-actions">
+      <div className="tab-actions" style={{ marginTop: '1.5rem' }}>
         <Button icon={Save} onClick={handleSave} disabled={!text.trim()}>Save Signature</Button>
       </div>
     </div>

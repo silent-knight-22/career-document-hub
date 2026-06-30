@@ -3,8 +3,8 @@
 // (Week 2: swap these calls for axios → Spring Boot)
 // ============================================
 
-const USERS_KEY = 'signflow_users';
-const SESSION_KEY = 'signflow_session';
+const USERS_KEY = 'cdh_users';
+const SESSION_KEY = 'cdh_session';
 
 // ---- Helpers ----
 const getUsers = () => JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
@@ -45,9 +45,9 @@ export const loginUser = ({ email, password, remember }) => {
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 
   if (remember) {
-    localStorage.setItem('signflow_remember', email.toLowerCase());
+    localStorage.setItem('cdh_remember', email.toLowerCase());
   } else {
-    localStorage.removeItem('signflow_remember');
+    localStorage.removeItem('cdh_remember');
   }
 
   return session;
@@ -99,4 +99,4 @@ export const deleteAccount = (userId) => {
 };
 
 // ---- Get remembered email ----
-export const getRememberedEmail = () => localStorage.getItem('signflow_remember') || '';
+export const getRememberedEmail = () => localStorage.getItem('cdh_remember') || '';

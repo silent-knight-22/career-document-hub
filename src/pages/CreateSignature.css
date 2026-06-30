@@ -213,32 +213,301 @@
   color: var(--text-tertiary);
 }
 
-/* Type tab */
-.font-picker { display: flex; flex-direction: column; gap: 0.5rem; }
-.font-options { display: flex; flex-direction: column; gap: 0.5rem; }
-.font-option {
-  padding: 0.75rem 1rem;
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-secondary);
-  cursor: pointer;
-  font-size: 1.5rem;
-  color: var(--text-primary);
-  text-align: left;
-  transition: all 0.2s ease;
+/* Premium Cursive Styles Grid */
+.font-picker-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
-.font-option:hover { border-color: var(--brand-primary); background: var(--bg-card); }
-.font-option.active { border-color: var(--brand-primary); background: var(--brand-primary-light); }
-[data-theme="dark"] .font-option.active { background: rgba(99,102,241,0.15); }
 
-.type-preview {
-  padding: 1.5rem;
-  background: white;
-  border: 1px solid var(--border-color);
+.signature-style-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.sig-style-card {
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  text-align: center;
-  min-height: 80px;
+  padding: 1rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+  min-height: 120px;
+}
+
+.sig-style-card:hover {
+  border-color: var(--brand-primary);
+  background: var(--bg-card);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.sig-style-card.active {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+[data-theme="dark"] .sig-style-card.active {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.sig-style-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 0.375rem;
+  flex-shrink: 0;
+}
+
+.sig-style-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sig-style-badge {
+  background: var(--brand-primary);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sig-style-preview {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.5rem;
+  overflow: hidden;
+}
+
+.sig-style-preview p {
+  font-size: 2.1rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  line-height: 1.1;
+  margin: 0;
+  padding: 0;
+}
+
+/* Light background inside preview cards for readable ink colors, with slight opacity adjustment in dark mode */
+[data-theme="dark"] .sig-style-preview {
+  background: #f8fafc;
+}
+
+/* Customizer Panel Layout */
+.sig-customizer-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.customizer-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+  margin: 0;
+}
+
+.customizer-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.customizer-col {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.customizer-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.customizer-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  font-family: var(--font-family);
+  outline: none;
+}
+.customizer-select:focus {
+  border-color: var(--brand-primary);
+}
+
+/* Weight Toggle Button Group */
+.weight-toggle-group {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-tertiary);
+  padding: 2px;
+  border-radius: var(--radius-md);
+}
+
+.weight-toggle-btn {
+  flex: 1;
+  padding: 0.4rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.weight-toggle-btn.active {
+  background: var(--bg-card);
+  color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.weight-toggle-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+/* Font Size Slider */
+.customizer-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  outline: none;
+  margin: 0.75rem 0;
+  cursor: pointer;
+}
+
+.customizer-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.customizer-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Ink Color Selector Row */
+.ink-color-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ink-color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.ink-color-dot:hover {
+  transform: scale(1.15);
+}
+.ink-color-dot.active {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px var(--brand-primary-light);
+}
+
+.custom-color-picker-wrapper {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: conic-gradient(red, yellow, green, cyan, blue, magenta, red);
+  cursor: pointer;
+}
+
+.custom-color-picker-input {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  opacity: 0;
+}
+
+/* Live Custom Preview Box */
+.custom-sig-live-preview {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preview-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.preview-box {
+  background: white;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  overflow: hidden;
+  text-align: center;
+}
+
+[data-theme="dark"] .preview-box {
+  background: #f8fafc; /* Keep light background in dark mode so custom colored inks remain readable */
 }

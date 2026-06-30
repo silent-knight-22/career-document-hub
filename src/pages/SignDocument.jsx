@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Move, Download, CheckCircle, Signature, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Move, Download, CheckCircle, Signature, ZoomIn, ZoomOut, RotateCcw, Loader2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getDocumentById, saveSignedDocument } from '../services/documentService';
@@ -8,7 +8,15 @@ import { getSignatures } from '../services/signatureService';
 import Navbar from '../components/layout/Navbar/Navbar';
 import Sidebar from '../components/layout/Sidebar/Sidebar';
 import Button from '../components/common/Button/Button';
+import { pdfjs } from 'react-pdf';
 import './SignDocument.css';
+
+// Configure the worker source using Vite's dynamic asset import system.
+// This is offline-capable and works out of the box in both dev and production builds.
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).href;
 
 export default function SignDocument() {
   const { id } = useParams();
@@ -30,17 +38,71 @@ export default function SignDocument() {
   const [zoom,      setZoom]      = useState(1);
   const [docImage,  setDocImage]  = useState(null);
   const [saving,    setSaving]    = useState(false);
+  const [loadingPdf, setLoadingPdf] = useState(false);
+  const [pdfError,   setPdfError]   = useState(null);
 
   // Load document as image
   useEffect(() => {
     if (!doc) return;
     if (doc.type === 'image') {
       setDocImage(doc.dataUrl);
-    } else {
-      // For PDFs, show as image via object URL (basic preview)
-      setDocImage(doc.dataUrl);
+      setLoadingPdf(false);
+      setPdfError(null);
+    } else if (doc.type === 'pdf') {
+      setLoadingPdf(true);
+      setPdfError(null);
+
+      const renderPdfPage = async () => {
+        try {
+          // Convert base64 dataUrl to Uint8Array for pdfjs
+          const parts = doc.dataUrl.split(',');
+          if (parts.length < 2) {
+            throw new Error('Invalid Base64 PDF data.');
+          }
+          const base64 = parts[1];
+          const binaryString = window.atob(base64);
+          const len = binaryString.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+
+          const loadingTask = pdfjs.getDocument({ data: bytes });
+          const pdf = await loadingTask.promise;
+          
+          if (pdf.numPages === 0) {
+            throw new Error('PDF has no pages.');
+          }
+          
+          const page = await pdf.getPage(1); // Render the first page
+          const viewport = page.getViewport({ scale: 1.5 }); // Good scale for detail
+          
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          
+          const renderContext = {
+            canvasContext: context,
+            viewport: viewport,
+          };
+          
+          await page.render(renderContext).promise;
+          
+          const pngUrl = canvas.toDataURL('image/png');
+          setDocImage(pngUrl);
+          setLoadingPdf(false);
+        } catch (err) {
+          console.error('Error rendering PDF page:', err);
+          setPdfError('Failed to load PDF preview. Only image-based signing is supported if the PDF is corrupt or invalid.');
+          setLoadingPdf(false);
+          toast.error('Failed to load PDF preview.');
+        }
+      };
+
+      renderPdfPage();
     }
-  }, [doc]);
+  }, [doc?.id, doc?.type, doc?.dataUrl]);
 
   if (!doc) {
     return (
@@ -214,7 +276,19 @@ export default function SignDocument() {
                 style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', cursor: selectedSig ? 'crosshair' : 'default' }}
                 onClick={addSignature}
               >
-                {docImage && (
+                {loadingPdf && (
+                  <div className="sign-doc-loading">
+                    <Loader2 className="animate-spin" size={32} style={{ color: 'var(--brand-primary)' }} />
+                    <p>Rendering PDF page...</p>
+                  </div>
+                )}
+                {pdfError && (
+                  <div className="sign-doc-error">
+                    <AlertCircle size={32} style={{ color: 'var(--color-error)' }} />
+                    <p>{pdfError}</p>
+                  </div>
+                )}
+                {!loadingPdf && !pdfError && docImage && (
                   <img
                     ref={imgRef}
                     src={docImage}

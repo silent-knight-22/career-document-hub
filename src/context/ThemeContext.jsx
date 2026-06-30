@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
-const THEME_KEY = 'signflow_theme';
+const THEME_KEY = 'cdh_theme';
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {

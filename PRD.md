@@ -256,7 +256,7 @@ flowchart TD
     F -- Invalid --> G[Show inline error styling]
     G --> E
     F -- Valid --> H[Call vaultService.addVaultItem]
-    H --> I[Store item in signflow_vault_userId key]
+    H --> I[Store item in career-document-hub_vault_userId key]
     I --> J[Update global Document list state]
     J --> K[Re-evaluate expiry tracking alerts]
     K --> L([Success Toast & Return to Vault overview])

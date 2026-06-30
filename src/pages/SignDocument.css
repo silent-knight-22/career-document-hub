@@ -189,3 +189,36 @@
   border-radius: 2px;
   cursor: se-resize;
 }
+
+/* PDF rendering loading and error states */
+.sign-doc-loading, .sign-doc-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 3rem;
+  width: 500px;
+  height: 600px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.sign-doc-loading svg, .sign-doc-error svg {
+  margin-bottom: 1rem;
+}
+
+.sign-doc-loading p, .sign-doc-error p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

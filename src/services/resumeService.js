@@ -2,7 +2,7 @@
 // RESUME SERVICE — localStorage layer
 // ============================================
 
-const getKey = (userId) => `signflow_resume_${userId}`;
+const getKey = (userId) => `cdh_resume_${userId}`;
 
 export const RESUME_DEFAULTS = {
   personal: { name: '', email: '', phone: '', location: '', linkedin: '', github: '', website: '', summary: '' },

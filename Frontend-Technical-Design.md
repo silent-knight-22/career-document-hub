@@ -70,7 +70,7 @@ graph TD
     end
     
     subgraph Browser Storage APIs
-        LS[localStorage: cdh_*, signflow_*]
+        LS[localStorage: cdh_*, career-document-hub_*]
         SS[sessionStorage: cdh_gemini_resolved_model]
     end
     
@@ -272,7 +272,7 @@ Cycles between light, dark, and system themes, applying styles by updating varia
 
 ```mermaid
 graph TD
-    ThemeInit([ThemeProvider Mounts]) --> CheckTheme[Read signflow_theme key]
+    ThemeInit([ThemeProvider Mounts]) --> CheckTheme[Read career-document-hub_theme key]
     CheckTheme --> ResolveTheme{Theme Chosen?}
     
     ResolveTheme -- null/system --> ApplySystem[Read browser preferences matching media queries]
@@ -611,14 +611,14 @@ sequenceDiagram
     User->>UI: Enter email, password, and click Login
     UI->>UI: Run form validation checks
     UI->>Svc: Call loginUser(email, password, remember)
-    Svc->>Storage: Read signflow_users list
+    Svc->>Storage: Read career-document-hub_users list
     Storage-->>Svc: Return users array
     Svc->>Svc: Match email and check password string
     alt Credentials Mismatch
         Svc-->>UI: Throw "Invalid email or password" error
         UI-->>User: Show authentication toast alert
     else Credentials Match
-        Svc->>Storage: Set signflow_session details
+        Svc->>Storage: Set career-document-hub_session details
         Svc-->>UI: Return session payload
         UI->>Context: Call login(session)
         Context->>Context: Update user state
@@ -644,7 +644,7 @@ sequenceDiagram
     UI->>Preview: Trigger re-render of resume details
     Preview-->>User: Update on-screen preview
     UI->>Svc: Call saveResume(userId, data) with debounce
-    Svc->>Storage: Set signflow_resume_userId item
+    Svc->>Storage: Set career-document-hub_resume_userId item
     Storage-->>Svc: Confirm write success
     Svc-->>UI: Return save confirmation
 ```

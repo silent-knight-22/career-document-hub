@@ -2,7 +2,7 @@
 // CERTIFICATE SERVICE — localStorage layer
 // ============================================
 
-const getKey = (userId) => `signflow_certs_${userId}`;
+const getKey = (userId) => `cdh_certs_${userId}`;
 
 export const getCertificates = (userId) =>
   JSON.parse(localStorage.getItem(getKey(userId)) || '[]');

@@ -1,32 +1,56 @@
 // ============================================================
-// GEMINI SERVICE — AI Document Intelligence
-// Architecture: auto-discover model from listModels endpoint.
-// No model name is ever hardcoded in a request — the service
-// queries the API to find what is actually available for this key.
+// GROQ SERVICE — AI Document Intelligence
+// Architecture: OpenAI-compatible REST API, client-side PDF 
+// text extraction, and Llama-3.2 vision support for images.
 // ============================================================
 
-const API_BASE    = 'https://generativelanguage.googleapis.com/v1beta';
-const KEY_STORAGE = 'cdh_gemini_api_key';
+import { pdfjs } from 'react-pdf';
+
+const API_BASE    = 'https://api.groq.com/openai/v1';
+const KEY_STORAGE = 'cdh_groq_api_key';
 const ANA_PREFIX  = 'cdh_analysis_';
 const CHAT_PREFIX = 'cdh_chat_';
 
-// ── Model config — preference order only, never used directly ─
-// The actual model sent in requests is always resolved via
-// listModels() so it matches what the API key has access to.
 const MODEL_PREFERENCE = [
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-1.5-flash',
-  'gemini-1.5-pro',
-  'gemini-pro',
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+  'mixtral-8x7b-32768',
+  'gemma2-9b-it',
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'llama-3.2-11b-vision-preview',
 ];
 
-// Per-session model cache (clears on tab reload — forces re-discovery)
-const SESSION_MODEL_KEY = 'cdh_gemini_resolved_model';
+const SESSION_MODEL_KEY = 'cdh_groq_resolved_model';
 
 function getSessionModel()       { return sessionStorage.getItem(SESSION_MODEL_KEY) || null; }
 function setSessionModel(name)   { sessionStorage.setItem(SESSION_MODEL_KEY, name); }
 function clearSessionModel()     { sessionStorage.removeItem(SESSION_MODEL_KEY); }
+
+// ── Manual model selection helpers ───────────────────────────
+const SELECTED_MODEL_KEY = 'cdh_groq_selected_model';
+const AVAILABLE_MODELS_KEY = 'cdh_groq_available_models';
+
+export const getSelectedModel = () => localStorage.getItem(SELECTED_MODEL_KEY) || '';
+export const setSelectedModel = (model) => {
+  if (model) {
+    localStorage.setItem(SELECTED_MODEL_KEY, model);
+  } else {
+    localStorage.removeItem(SELECTED_MODEL_KEY);
+  }
+  clearSessionModel();
+};
+
+export const getAvailableModels = () => {
+  try {
+    return JSON.parse(localStorage.getItem(AVAILABLE_MODELS_KEY) || '[]');
+  } catch {
+    return [];
+  }
+};
+
+export const setAvailableModels = (models) => {
+  localStorage.setItem(AVAILABLE_MODELS_KEY, JSON.stringify(models));
+};
 
 // ── API Key helpers ───────────────────────────────────────────
 export const getApiKey   = ()  => localStorage.getItem(KEY_STORAGE) || '';
@@ -50,23 +74,48 @@ export const saveChatHistory = (docId, h) =>
 export const clearChatHistory = (docId) =>
   localStorage.removeItem(CHAT_PREFIX + docId);
 
-// ── Data URL → Gemini inline_data part ───────────────────────
-function dataUrlToPart(dataUrl) {
-  const m = dataUrl.match(/^data:([^;]+);base64,(.+)$/s);
-  if (!m) throw new Error('Unrecognised data URL format');
-  return { inline_data: { mime_type: m[1], data: m[2] } };
+// ── Client-side PDF text extractor ───────────────────────────
+async function extractTextFromPdf(dataUrl) {
+  try {
+    const base64 = dataUrl.split(',')[1];
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const loadingTask = pdfjs.getDocument({ data: bytes });
+    const pdf = await loadingTask.promise;
+    let fullText = '';
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map((item) => item.str).join(' ');
+      fullText += `\n--- Page ${i} ---\n${pageText}\n`;
+    }
+    
+    return fullText;
+  } catch (err) {
+    console.error('[Groq] PDF text extraction failed:', err);
+    throw new Error('Failed to extract text from PDF file. Make sure it is not password-protected.');
+  }
 }
 
 // ════════════════════════════════════════════════════════════════
-// listModels — queries the actual API for available models.
-// Returns an array of model IDs (without the "models/" prefix)
-// that support generateContent, filtered to a usable set.
+// listModels — queries Groq Console models endpoint
 // ════════════════════════════════════════════════════════════════
 async function listModels(key) {
-  const url = `${API_BASE}/models?key=${encodeURIComponent(key)}`;
-  console.info('[Gemini] listModels →', url.replace(encodeURIComponent(key), '***'));
+  const url = `${API_BASE}/models`;
+  console.info('[Groq] listModels →', url);
 
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${key}`
+    }
+  });
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw Object.assign(
@@ -75,80 +124,98 @@ async function listModels(key) {
     );
   }
 
-  const { models = [] } = await res.json();
-  const gc = models
-    .filter(m => Array.isArray(m.supportedGenerationMethods)
-                 && m.supportedGenerationMethods.includes('generateContent'))
-    .map(m => m.name.replace(/^models\//, ''));
+  const json = await res.json();
+  const models = json.data || [];
+  const filtered = models
+    .map(m => m.id)
+    .filter(id => id.includes('llama') || id.includes('mixtral') || id.includes('gemma'));
 
-  console.info('[Gemini] generateContent-capable models:', gc.join(', ') || '(none)');
-  return gc;
+  console.info('[Groq] generate-capable models:', filtered.join(', ') || '(none)');
+  return filtered;
 }
 
 // ════════════════════════════════════════════════════════════════
 // resolveModel — returns the best available model for this key.
-// Result is cached in sessionStorage so we only call listModels
-// once per browser session per API key.
 // ════════════════════════════════════════════════════════════════
 async function resolveModel(key) {
+  const selected = getSelectedModel();
+  if (selected) {
+    console.info('[Groq] Using manually selected model:', selected);
+    return selected;
+  }
+
   const cached = getSessionModel();
   if (cached) {
-    console.info('[Gemini] Using cached resolved model:', cached);
+    console.info('[Groq] Using cached resolved model:', cached);
     return cached;
   }
 
   const available = await listModels(key);
+  setAvailableModels(available);
 
   if (available.length === 0) {
-    throw new Error(
-      'Your API key has no access to any Gemini generative models. ' +
-      'Make sure the Generative Language API is enabled in your Google Cloud project.'
-    );
+    throw new Error('Your API key has no access to any Groq generative models.');
   }
 
-  // Pick highest-preference model that the API actually exposes
+  // Pick highest-preference model
   for (const preferred of MODEL_PREFERENCE) {
     const match = available.find(
       m => m === preferred || m.startsWith(preferred + '-') || m.startsWith(preferred + '.')
     );
     if (match) {
-      console.info('[Gemini] Resolved model (from preference list):', match);
+      console.info('[Groq] Resolved model:', match);
       setSessionModel(match);
       return match;
     }
   }
 
-  // Fallback: first available model
   const fallback = available[0];
-  console.info('[Gemini] Resolved model (fallback to first available):', fallback);
+  console.info('[Groq] Resolved model (fallback):', fallback);
   setSessionModel(fallback);
   return fallback;
 }
 
 // ════════════════════════════════════════════════════════════════
-// geminiPost — central request function.
-// Always resolves the model dynamically.
+// groqPost — central request function (OpenAI spec)
+function modelSupportsJsonMode(model) {
+  const lower = model.toLowerCase();
+  if (lower.includes('vision') || lower.includes('scout') || lower.includes('preview')) {
+    return false;
+  }
+  return true;
+}
+
 // ════════════════════════════════════════════════════════════════
-async function geminiPost(contents, config = {}) {
+// groqPost — central request function (OpenAI spec)
+// ════════════════════════════════════════════════════════════════
+async function groqPost(messages, config = {}) {
   const key = getApiKey();
   if (!key) throw new Error('NO_API_KEY');
 
-  // Resolve model (cached after first call)
   const model = config.model || await resolveModel(key);
-  const url   = `${API_BASE}/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const url   = `${API_BASE}/chat/completions`;
 
-  console.info('[Gemini] POST models/' + model + ':generateContent');
+  console.info('[Groq] POST chat/completions using:', model);
+
+  const bodyPayload = {
+    model,
+    messages,
+    temperature: config.temperature ?? 0.1,
+    max_tokens: config.maxTokens ?? 4096,
+  };
+
+  // Enable JSON mode if requested and supported
+  if (config.responseFormatJson && modelSupportsJsonMode(model)) {
+    bodyPayload.response_format = { type: 'json_object' };
+  }
 
   const res = await fetch(url, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents,
-      generationConfig: {
-        temperature:     config.temperature     ?? 0.1,
-        maxOutputTokens: config.maxOutputTokens ?? 8192,
-      },
-    }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key}`
+    },
+    body: JSON.stringify(bodyPayload),
   });
 
   if (!res.ok) {
@@ -156,46 +223,53 @@ async function geminiPost(contents, config = {}) {
     const msg  = body?.error?.message || '';
     const code = body?.error?.code   || res.status;
 
-    // Model not found → clear session so next call re-discovers
-    if (res.status === 404 || (msg.toLowerCase().includes('not found') && msg.toLowerCase().includes('model'))) {
-      console.warn('[Gemini] Model not found, clearing session model cache');
+    if (res.status === 404 || msg.toLowerCase().includes('model not found')) {
+      console.warn('[Groq] Model not found, clearing session model cache');
       clearSessionModel();
-      throw new Error(
-        `Model "${model}" is not available for this API key. ` +
-        `Please try again — the service will auto-select an available model.`
-      );
+      throw new Error(`Model "${model}" is not available for this Groq API key.`);
     }
-    if (res.status === 400) throw new Error(`Invalid request: ${msg}`);
-    if (res.status === 403) throw new Error(`Permission denied: ${msg || 'Check that the Generative Language API is enabled.'}`);
-    if (res.status === 429) throw new Error('Rate limit reached — please wait 60 seconds and try again.');
-    if (res.status >= 500) throw new Error(`Gemini server error (${code}). Try again in a moment.`);
+    if (res.status === 401) throw new Error('Invalid Groq API key. Please check your credentials.');
+    if (res.status === 403) throw new Error(`Access Denied: ${msg}`);
+    if (res.status === 429) {
+      throw new Error(`Groq Rate limit / Quota exceeded: ${msg || 'Too many requests. Please wait a moment.'}`);
+    }
+    if (res.status >= 500) throw new Error(`Groq server error (${code}). Try again in a moment.`);
     throw new Error(msg || `API error: HTTP ${res.status}`);
   }
 
   const json = await res.json();
-  const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Empty response from Gemini. Please retry.');
-  return { text, model }; // return used model for transparency
+  const text = json.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Empty response from Groq. Please retry.');
+  return { text, model };
 }
 
-// ── Parse JSON safely (strips markdown fences) ────────────────
+// ── Parse JSON safely (with trailing-comma auto-repair) ────────
 function parseJSON(raw) {
-  const clean = raw
+  let clean = raw
     .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
+  
+  // Remove trailing commas before closing braces/brackets (common LLM syntax error)
+  clean = clean.replace(/,\s*([\]}])/g, '$1');
+
   try {
     return JSON.parse(clean);
-  } catch {
+  } catch (err) {
     const m = clean.match(/\{[\s\S]+\}/);
-    if (m) return JSON.parse(m[0]);
-    throw new Error('Gemini returned malformed JSON. Please retry.');
+    if (m) {
+      try {
+        const nested = m[0].replace(/,\s*([\]}])/g, '$1');
+        return JSON.parse(nested);
+      } catch {}
+    }
+    throw new Error(
+      `JSON Parse Error: ${err.message}. To resolve this, change your preferred model ` +
+      `to "llama-3.3-70b-versatile" or "Auto-detect" to enforce native JSON Mode.`
+    );
   }
 }
 
 // ════════════════════════════════════════════════════════════════
 // verifyApiKey
-// Verifies by calling listModels (lightweight GET, no content sent).
-// Returns { ok, model, allModels } on success.
-// Returns { ok: false, error } with the exact API error on failure.
 // ════════════════════════════════════════════════════════════════
 export async function verifyApiKey(key) {
   if (!key?.trim()) return { ok: false, error: 'Please enter your API key.' };
@@ -206,14 +280,13 @@ export async function verifyApiKey(key) {
     if (available.length === 0) {
       return {
         ok: false,
-        error:
-          'Your API key is valid but no Gemini generative models are accessible. ' +
-          'Enable the "Generative Language API" in your Google Cloud Console.',
+        error: 'Your API key is valid but no Groq generative models are accessible.',
       };
     }
 
-    // Resolve + cache the best model now
-    setSessionModel(null); // reset so resolveModel re-runs with new key
+    setAvailableModels(available);
+
+    setSessionModel(null);
     sessionStorage.removeItem(SESSION_MODEL_KEY);
 
     let bestModel = available[0];
@@ -223,18 +296,15 @@ export async function verifyApiKey(key) {
     }
     setSessionModel(bestModel);
 
-    console.info('[Gemini] Key verified ✓  Best model:', bestModel);
-    console.info('[Gemini] All available models:', available.join(', '));
-
+    console.info('[Groq] Key verified ✓  Best model:', bestModel);
     return { ok: true, model: bestModel, allModels: available };
 
   } catch (err) {
-    console.error('[Gemini] verifyApiKey error:', err.message);
-    // Map HTTP error codes to user-friendly messages
-    if (err.status === 400) return { ok: false, error: `Invalid API key: ${err.message}` };
-    if (err.status === 403) return { ok: false, error: `API key rejected: ${err.message}` };
-    if (err.status === 429) return { ok: false, error: 'Too many requests. Wait a moment and try again.' };
-    return { ok: false, error: err.message || 'Network error — check your connection.' };
+    console.error('[Groq] verifyApiKey error:', err.message);
+    if (err.message.includes('401') || err.message.toLowerCase().includes('unauthorized')) {
+      return { ok: false, error: 'Invalid Groq API key. Please check your credentials.' };
+    }
+    return { ok: false, error: err.message || 'Failed to verify key.' };
   }
 }
 
@@ -399,30 +469,83 @@ Return ONLY valid JSON — no markdown code fences, no commentary, just the JSON
 `.trim();
 
 // ════════════════════════════════════════════════════════════════
-// analyzeDocument — sends full document to Gemini, returns JSON
+// analyzeDocument — sends extracted text or image payload to Groq
 // ════════════════════════════════════════════════════════════════
 export async function analyzeDocument(dataUrl, onProgress) {
-  onProgress?.({ step: 1, label: 'Preparing document for AI...' });
-
-  let docPart;
-  try {
-    docPart = dataUrlToPart(dataUrl);
-  } catch (e) {
-    throw new Error('Cannot read document format. Try re-uploading.');
+  const isPdf = dataUrl.startsWith('data:application/pdf');
+  
+  let docText = '';
+  if (isPdf) {
+    onProgress?.({ step: 1, label: 'Extracting text from PDF client-side...' });
+    docText = await extractTextFromPdf(dataUrl);
+  } else {
+    onProgress?.({ step: 1, label: 'Preparing image for analysis...' });
   }
 
-  onProgress?.({ step: 2, label: 'Resolving Gemini model...' });
+  onProgress?.({ step: 2, label: 'Resolving Groq model...' });
 
-  const { text, model } = await geminiPost(
-    [{ parts: [docPart, { text: DEEP_ANALYSIS_PROMPT }] }],
-    { temperature: 0.1, maxOutputTokens: 8192 }
-  );
+  const key = getApiKey();
+  let resolvedModel;
+  if (!isPdf) {
+    const selected = getSelectedModel();
+    if (selected && (selected.includes('vision') || selected.includes('scout'))) {
+      resolvedModel = selected;
+    } else {
+      const available = getAvailableModels();
+      const activeVisionModel = available.find(
+        m => m.includes('vision') || m.includes('scout')
+      );
+      resolvedModel = activeVisionModel || 'meta-llama/llama-4-scout-17b-16e-instruct';
+    }
+    console.info('[Groq] Visual document analysis resolved to:', resolvedModel);
+  } else {
+    resolvedModel = getSelectedModel() || await resolveModel(key);
+  }
 
-  onProgress?.({ step: 3, label: `Parsing analysis (via ${model})...` });
+  onProgress?.({ step: 3, label: `Analyzing document (via Groq ${resolvedModel})...` });
 
+  let messages = [];
+  if (isPdf) {
+    messages = [
+      {
+        role: 'system',
+        content: 'You are an expert document analyst. You must analyze the document text and output a complete structured analysis in JSON format.'
+      },
+      {
+        role: 'user',
+        content: `${DEEP_ANALYSIS_PROMPT}\n\nHere is the text extracted from the document:\n${docText}`
+      }
+    ];
+  } else {
+    messages = [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: `You are an expert document analyst. Analyze this document image and return a complete structured analysis in JSON format following this exact specification:\n\n${DEEP_ANALYSIS_PROMPT}`
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: dataUrl
+            }
+          }
+        ]
+      }
+    ];
+  }
+
+  const { text, model } = await groqPost(messages, {
+    model: resolvedModel,
+    temperature: 0.1,
+    maxTokens: 4096, // Groq output limit
+    responseFormatJson: true
+  });
+
+  onProgress?.({ step: 4, label: 'Parsing analysis...' });
   const analysis = parseJSON(text);
 
-  onProgress?.({ step: 4, label: 'Done!' });
   return { ...analysis, _model: model };
 }
 
@@ -433,9 +556,8 @@ export async function askQuestion(analysis, question, chatHistory) {
   const context = buildRetrievalContext(analysis, question);
 
   const systemTurn = {
-    role: 'user',
-    parts: [{
-      text: `You are an expert document assistant. The following is a structured analysis of a "${analysis.document_type || 'document'}" that the user has uploaded. Use ONLY this analysis to answer questions. Never invent information.
+    role: 'system',
+    content: `You are an expert document assistant. The following is a structured analysis of a "${analysis.document_type || 'document'}" that the user has uploaded. Use ONLY this analysis to answer questions. Never invent information.
 
 DOCUMENT ANALYSIS:
 ${context}
@@ -447,27 +569,23 @@ ANSWERING RULES:
 4. If information is not in the analysis, say exactly: "This information was not found in the document."
 5. Use bullet points for lists of items.
 6. For legal or financial information, reproduce the exact wording from the analysis.`
-    }],
-  };
-
-  const assistantAck = {
-    role: 'model',
-    parts: [{ text: `Understood. I have reviewed the complete analysis of this ${analysis.document_type || 'document'}. I will answer comprehensively and cite sources from the analysis for every response. Please ask your questions.` }],
   };
 
   const historyTurns = chatHistory.flatMap((h) => [
-    { role: 'user',  parts: [{ text: h.question }] },
-    { role: 'model', parts: [{ text: h.answer   }] },
+    { role: 'user',      content: h.question },
+    { role: 'assistant', content: h.answer   }
   ]);
 
-  const contents = [
+  const messages = [
     systemTurn,
-    assistantAck,
     ...historyTurns,
-    { role: 'user', parts: [{ text: question }] },
+    { role: 'user', content: question },
   ];
 
-  const { text } = await geminiPost(contents, { temperature: 0.2, maxOutputTokens: 4096 });
+  const key = getApiKey();
+  const model = getSelectedModel() || await resolveModel(key);
+
+  const { text } = await groqPost(messages, { model, temperature: 0.2, maxTokens: 2048 });
   return text;
 }
 

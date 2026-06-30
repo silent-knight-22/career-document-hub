@@ -3,7 +3,7 @@
 // (Week 2: swap for axios → Spring Boot)
 // ============================================
 
-const getKey = (userId) => `signflow_vault_${userId}`;
+const getKey = (userId) => `cdh_vault_${userId}`;
 
 export const VAULT_CATEGORIES = [
   { id: 'personal',     label: 'Personal ID',   color: '#6366f1', emoji: '🪪' },

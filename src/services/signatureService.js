@@ -3,7 +3,7 @@
 // (Week 2: swap for axios → Spring Boot REST APIs)
 // ============================================
 
-const getKey = (userId) => `signflow_signatures_${userId}`;
+const getKey = (userId) => `cdh_signatures_${userId}`;
 
 export const getSignatures = (userId) => {
   return JSON.parse(localStorage.getItem(getKey(userId)) || '[]');
