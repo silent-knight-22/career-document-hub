@@ -51,6 +51,7 @@ All React components have been audited to ensure they comply with the strict **1
 | **`components/common/Button/Button.jsx`** | 31 | 🟢 Pass | Custom themeable button component |
 | **`components/common/Input/Input.jsx`** | 27 | 🟢 Pass | Controlled styling text input field |
 | **`components/common/Modal/Modal.jsx`** | 39 | 🟢 Pass | Center overlay overlay popup container |
+| **`components/common/ErrorBoundary/ErrorBoundary.jsx`** | 52 | 🟢 Pass | Global component error fallback catcher |
 | **`components/common/ThemeToggle/ThemeToggle.jsx`** | 31 | 🟢 Pass | Header theme cycle button |
 | **`components/layout/Navbar/Navbar.jsx`** | 31 | 🟢 Pass | Header breadcrumbs view controller |
 | **`components/layout/Sidebar/Sidebar.jsx`** | 119 | 🟢 Pass | Responsive navigation matrix & status |
@@ -88,6 +89,7 @@ All React components have been audited to ensure they comply with the strict **1
 | **`components/profile/AccountInfo.jsx`** | 35 | 🟢 Pass | Username & password update interface |
 | **`components/profile/DangerZone.jsx`** | 35 | 🟢 Pass | Action center to wipe cached local storage data |
 | **`components/profile/DeleteAccountModal.jsx`** | 31 | 🟢 Pass | Account termination verification modal |
+| **`components/profile/ProfileHero.jsx`** | 75 | 🟢 Pass | Visual banner & stats container header |
 | **`components/documentAI/ApiKeySetup.jsx`** | 88 | 🟢 Pass | Initial Groq Key credential form |
 | **`components/documentAI/AnalysisSkeleton.jsx`** | 41 | 🟢 Pass | Multi-step progress loading animation |
 | **`components/documentAI/DocListPanel.jsx`** | 113 | 🟢 Pass | Left panel selector list for document AI |

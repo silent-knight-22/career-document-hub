@@ -61,13 +61,13 @@ The frontend houses **14 distinct page views** connected via `AppRoutes.jsx`. Ev
 | **`pages/Documents.jsx`** | `/documents` | 142 | `useAuth` | Protected | **Inputs**: Upload zone modal.<br>**Outputs**: Categorized list of unsigned vs signed files. |
 | **`pages/SignDocument.jsx`** | `/documents/sign/:id` | 149 | `useAuth`, `usePdfRenderer`, `useSignatureCanvas` | Protected | **Inputs**: Draggable signature overlay stamp placement.<br>**Outputs**: Client-side compiled signed PDF download. |
 | **`pages/DocumentAI.jsx`** | `/ai-insights` | 147 | `useAuth`, `useDocumentAIState` | Protected | **Inputs**: API setup modal, document selection dropdown.<br>**Outputs**: Renders deep summarization tabs & Q&A chat. |
-| **`pages/Profile.jsx`** | `/profile` | 150 | `useAuth`, `useTheme` | Protected | **Inputs**: Name, Email, password change fields, theme cycle toggles, and cache wipe button. |
+| **`pages/Profile.jsx`** | `/profile` | 144 | `useAuth`, `useTheme` | Protected | **Inputs**: Name, Email, password change fields, theme cycle toggles, local storage quota stats, and cache wipe button. |
 
 ---
 
 ### 2. Observations
 
-*   **100% Green Compliance**: Every single page file is strictly at or below 150 lines. The largest pages are `Profile.jsx` (exactly 150 lines) and `Register.jsx` (exactly 149 lines).
+*   **100% Green Compliance**: Every single page file is strictly at or below 150 lines. The largest pages are `SignDocument.jsx` and `Register.jsx` (exactly 149 lines).
 *   **Security Isolation**: Public routes (Login, Register, Forgot Password) are isolated. All remaining pages are protected by the `ProtectedRoute.jsx` guard, which verifies active sessions before loading children, redirecting unauthenticated users to `/login`.
 *   **Decoupled State**: Page views do not manage complex side effects locally. They call custom hooks (like `useResumeState.js` or `useDocumentAIState.js`) which return pre-packaged reactive variables and action handlers.
 
@@ -75,7 +75,7 @@ The frontend houses **14 distinct page views** connected via `AppRoutes.jsx`. Ev
 
 ### 3. Recommendations
 
-1.  **Refactor `Profile.jsx`**: It is currently at exactly 150 lines. If any additional profiles properties are added, decompose the `DangerZone` or `AccountInfo` subcomponents further to keep it green.
+1.  **Refactor `Profile.jsx`**: Completed. Decomposed the Profile Hero sections into a reusable `ProfileHero.jsx` component, reducing `Profile.jsx` to 144 lines.
 2.  **Breadcrumbs Mapping**: Consider centralizing route-to-title breadcrumbs inside `routes/AppRoutes.jsx` to avoid static title mappings across each page container.
 
 ---

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Calendar, Edit2, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getUserProfile, updateUserProfile, deleteAccount } from '../services/authService';
@@ -13,6 +12,8 @@ import ThemeToggle from '../components/common/ThemeToggle/ThemeToggle';
 import DangerZone from '../components/profile/DangerZone';
 import DeleteAccountModal from '../components/profile/DeleteAccountModal';
 import AccountInfo from '../components/profile/AccountInfo';
+import ProfileHero from '../components/profile/ProfileHero';
+import { getLocalStorageUsage } from '../utils/storageHelper';
 import './Profile.css';
 
 export default function Profile() {
@@ -21,6 +22,7 @@ export default function Profile() {
   const profile   = getUserProfile(user?.userId || '');
   const sigs      = getSignatures(user?.userId || '');
   const docStats  = getDocumentStats(user?.userId || '');
+  const storage   = getLocalStorageUsage();
   const [editName,    setEditName]    = useState(false);
   const [name,        setName]        = useState(user?.name || '');
   const [saving,      setSaving]      = useState(false);
@@ -29,20 +31,17 @@ export default function Profile() {
   const initials = user?.name ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) : '?';
 
   const handleSaveName = () => {
-    if (!name.trim()) { toast.error('Name cannot be empty'); return; }
+    if (!name.trim()) return toast.error('Name cannot be empty');
     setSaving(true);
     updateUserProfile(user.userId, { name: name.trim() });
     updateSession({ name: name.trim() });
     toast.success('Name updated!');
-    setSaving(false);
-    setEditName(false);
+    setSaving(false); setEditName(false);
   };
   const handleDeleteAccount = () => {
-    if (deleteInput !== user.email) { toast.error('Email does not match'); return; }
-    deleteAccount(user.userId);
-    logout();
-    toast.success('Account deleted');
-    navigate('/login');
+    if (deleteInput !== user.email) return toast.error('Email does not match');
+    deleteAccount(user.userId); logout();
+    toast.success('Account deleted'); navigate('/login');
   };
 
   return (
@@ -51,61 +50,20 @@ export default function Profile() {
       <div className="main-content">
         <Navbar title="Profile" />
         <div className="page-container">
-          {/* Profile hero */}
-          <div className="profile-hero card animate-fade-in-up">
-            <div className="profile-hero-banner" />
-            <div className="profile-hero-body">
-              <div className="profile-avatar-lg">{initials}</div>
-              <div className="profile-hero-info">
-                {editName ? (
-                  <div className="profile-name-edit">
-                    <input
-                      className="profile-name-input"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-                      autoFocus
-                    />
-                    <button className="profile-name-save" onClick={handleSaveName} disabled={saving}>
-                      <Save size={16} />
-                    </button>
-                    <button className="profile-name-cancel" onClick={() => { setEditName(false); setName(user?.name || ''); }}>
-                      ×
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <h2 className="profile-name">{user?.name}</h2>
-                    <button className="profile-edit-btn" onClick={() => setEditName(true)} title="Edit name">
-                      <Edit2 size={14} />
-                    </button>
-                  </div>
-                )}
-                <p className="profile-email">
-                  <Mail size={14} /> {user?.email}
-                </p>
-                <p className="profile-since">
-                  <Calendar size={13} />
-                  Member since {profile ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—'}
-                </p>
-              </div>
-
-              <div className="profile-stats">
-                <div className="profile-stat">
-                  <span className="profile-stat-value">{sigs.length}</span>
-                  <span className="profile-stat-label">Signatures</span>
-                </div>
-                <div className="profile-stat">
-                  <span className="profile-stat-value">{docStats.total}</span>
-                  <span className="profile-stat-label">Documents</span>
-                </div>
-                <div className="profile-stat">
-                  <span className="profile-stat-value">{docStats.signed}</span>
-                  <span className="profile-stat-label">Signed</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ProfileHero
+            initials={initials}
+            editName={editName}
+            setEditName={setEditName}
+            name={name}
+            setName={setName}
+            saving={saving}
+            handleSaveName={handleSaveName}
+            user={user}
+            profile={profile}
+            sigsCount={sigs.length}
+            docTotal={docStats.total}
+            docSigned={docStats.signed}
+          />
           <div className="profile-grid">
 
             <AccountInfo
@@ -124,6 +82,42 @@ export default function Profile() {
                   Choose how Career Document Hub looks. The system setting follows your device preference.
                 </p>
                 <ThemeToggle />
+              </div>
+            </div>
+
+            {/* Storage Usage */}
+            <div className="card animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+              <div className="card-header">
+                <h3>Local Storage Usage</h3>
+              </div>
+              <div className="card-body">
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                  Your documents and signatures are currently cached in your browser.
+                </p>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  marginBottom: '0.5rem'
+                }}>
+                  <span>Quota Used</span>
+                  <span>{storage.usedMb} MB / {storage.limitMb} MB ({storage.percent}%)</span>
+                </div>
+                <div style={{ width: '100%', height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${storage.percent}%`, height: '100%',
+                    background: storage.percent > 80 ? '#ef4444' : 'var(--brand-primary)',
+                    borderRadius: '4px', transition: 'width 0.3s ease'
+                  }} />
+                </div>
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '0.5rem', lineHeight: '1.4' }}>
+                  {storage.percent > 80 
+                    ? '⚠️ Storage quota is almost full! Please delete some documents to make space.' 
+                    : '💡 Once the Spring Boot backend is active, this local limit will disappear.'
+                  }
+                </p>
               </div>
             </div>
 

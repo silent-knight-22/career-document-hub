@@ -16,7 +16,15 @@ import ExpiryTracker   from '../pages/Expiry';
 import ResumeBuilder   from '../pages/Resume';
 import DocumentAI      from '../pages/DocumentAI';
 
-const P = ({ children }) => <ProtectedRoute>{children}</ProtectedRoute>;
+import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
+
+const P = ({ children }) => (
+  <ProtectedRoute>
+    <ErrorBoundary>
+      {children}
+    </ErrorBoundary>
+  </ProtectedRoute>
+);
 
 export default function AppRoutes() {
   return (
