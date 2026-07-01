@@ -3,7 +3,7 @@ import { Brain, Sparkles, MessageSquare, BookOpen, CheckCircle2 } from 'lucide-r
 import { useAuth } from '../context/AuthContext';
 import { getVaultItems } from '../services/vaultService';
 import { getDocuments } from '../services/documentService';
-import { getAvailableModels, clearApiKey } from '../services/groqService';
+import { getAvailableModels, clearApiKey, setSelectedModel } from '../services/groqService';
 import Navbar from '../components/layout/Navbar/Navbar';
 import Sidebar from '../components/layout/Sidebar/Sidebar';
 import ApiKeySetup from '../components/documentAI/ApiKeySetup';
