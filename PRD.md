@@ -345,10 +345,14 @@ The Career Document Hub is designed to evolve from a local-first utility to an e
     *   Redis Pub/Sub support to handle background file scanning tasks asynchronously.
 
 ### Phase 4: AI Document Intelligence Suite
-*   **Goal**: Move beyond static prompt extraction to active OCR document parsing.
+*   **Goal**: Move beyond static prompt extraction to active OCR document parsing and biometric custom styling.
 *   **Features**:
     *   Integration of Google Cloud Document AI for specialized processing of resumes, government IDs, and tax documents.
     *   Advanced entity extraction and verification (cross-checking names, dates, and amounts against user profiles).
+    *   **AI Handwriting-to-Font Signature Engine**:
+        *   Template-based upload of hand-written letters.
+        *   Backend contour tracing (OpenCV) and generative AI synthesis (GAN/RNN) to output custom vector glyph font files (`.ttf`/`.woff`).
+        *   Dynamic client-side styling to render typed text using the user's actual handwriting style.
     *   Support for parsing scans and high-resolution camera uploads.
 
 ### Phase 5: RAG-Based Document Search
