@@ -237,6 +237,14 @@ async function groqPost(messages, config = {}) {
     if (res.status === 429) {
       throw new Error(`Groq Rate limit / Quota exceeded: ${msg || 'Too many requests. Please wait a moment.'}`);
     }
+    if (res.status === 400 && (
+      msg.toLowerCase().includes('request too large') || 
+      msg.toLowerCase().includes('tpm') || 
+      msg.toLowerCase().includes('token limit') || 
+      msg.toLowerCase().includes('context length')
+    )) {
+      throw new Error('This document is too large to analyze. Please choose a smaller or shorter document to proceed.');
+    }
     if (res.status >= 500) throw new Error(`Groq server error (${code}). Try again in a moment.`);
     throw new Error(msg || `API error: HTTP ${res.status}`);
   }
@@ -482,6 +490,12 @@ export async function analyzeDocument(dataUrl, onProgress) {
   if (isPdf) {
     onProgress?.({ step: 1, label: 'Extracting text from PDF client-side...' });
     docText = await extractTextFromPdf(dataUrl);
+    
+    // Local size pre-check (Safe free tier limit: 36,000 characters)
+    const maxChars = 36000;
+    if (docText.length > maxChars) {
+      throw new Error('This document is too large to analyze. Please select a shorter document or a smaller file (recommended maximum length: 30,000 characters).');
+    }
   } else {
     onProgress?.({ step: 1, label: 'Preparing image for analysis...' });
   }
