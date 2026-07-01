@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, AlertCircle, Trash2 } from 'lucide-react';
+import { Search, AlertCircle, Trash2, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getDocuments, deleteDocument } from '../services/documentService';
