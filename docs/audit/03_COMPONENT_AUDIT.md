@@ -56,7 +56,7 @@ All React components have been audited to ensure they comply with the strict **1
 | **`components/layout/Sidebar/Sidebar.jsx`** | 119 | 🟢 Pass | Responsive navigation matrix & status |
 | **`components/layout/ProtectedRoute/ProtectedRoute.jsx`** | 17 | 🟢 Pass | Auth session validity route guard wrapper |
 | **`components/auth/AuthHeader.jsx`** | 18 | 🟢 Pass | Styled header for authentication layouts |
-| **`components/auth/PasswordStrength.jsx`** | 28 | 🟢 Pass | Interactive password validation indicator |
+| **`components/auth/PasswordStrength.jsx`** | 21 | 🟢 Pass | Interactive password validation indicator |
 | **`components/dashboard/StatCard.jsx`** | 17 | 🟢 Pass | KPI metric card item |
 | **`components/dashboard/RecentDocuments.jsx`** | 52 | 🟢 Pass | Lists recently created signatures & vault uploads |
 | **`components/dashboard/RecentSignatures.jsx`** | 50 | 🟢 Pass | Lists recently drawn user signatures |
