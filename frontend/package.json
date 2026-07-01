@@ -19,7 +19,8 @@
     "react-pdf": "^10.4.1",
     "react-router-dom": "^7.18.0",
     "react-signature-canvas": "^1.1.0-alpha.2",
-    "react-to-print": "^3.3.0"
+    "react-to-print": "^3.3.0",
+    "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
