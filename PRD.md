@@ -248,7 +248,7 @@ Demonstrates uploading a document to the vault, setting categorization, and crea
 
 ```mermaid
 flowchart TD
-    A([User navigates to /vault]) --> B[Click "Upload Document" Button]
+    A([User navigates to /vault]) --> B["Click 'Upload Document' Button"]
     B --> C[Select File: PDF or Image]
     C --> D[System reads file as base64 Data URL]
     D --> E[User completes form: Name, Category, Tags, Notes, Expiry Date]
@@ -281,7 +281,7 @@ flowchart TD
     SignNav --> LoadDoc[Load original document in editor workspace]
     LoadDoc --> ChooseSig[Select default or custom signature stamp]
     ChooseSig --> PositionSig[Drag, drop, and resize signature stamp onto the document page]
-    PositionSig --> Burn[Click "Sign Document"]
+    PositionSig --> Burn["Click 'Sign Document'"]
     Burn --> ExportDoc[Merge signature canvas with document canvas]
     ExportDoc --> SaveDoc[Save signedDataUrl and date signed to LocalStorage]
     SaveDoc --> DownloadDoc([Download signed document output])
