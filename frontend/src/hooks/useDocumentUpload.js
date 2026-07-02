@@ -18,7 +18,7 @@ function trySaveDocument(userId, data) {
     return saveDocument(userId, data);
   } catch (err) {
     if (err.name === 'QuotaExceededError' || err.code === 22) {
-      throw new Error('Storage full. Please delete some documents and try again.');
+      throw new Error('Storage full. Please delete some documents and try again.', { cause: err });
     }
     throw err;
   }

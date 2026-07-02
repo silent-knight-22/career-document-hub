@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getDocumentById } from '../services/documentService';
 import { getSignatures } from '../services/signatureService';
 import Navbar from '../components/layout/Navbar/Navbar';
 import Sidebar from '../components/layout/Sidebar/Sidebar';
+import Button from '../components/common/Button/Button';
 import SignaturePanel from '../components/documents/SignaturePanel';
 import SignatureOverlay from '../components/documents/SignatureOverlay';
 import CanvasBackground from '../components/documents/CanvasBackground';

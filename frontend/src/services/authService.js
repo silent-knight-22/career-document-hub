@@ -69,7 +69,8 @@ export const getUserProfile = (userId) => {
   const users = getUsers();
   const user = users.find((u) => u.id === userId);
   if (!user) return null;
-  const { password: _, ...safeUser } = user;
+  const safeUser = { ...user };
+  delete safeUser.password;
   return safeUser;
 };
 

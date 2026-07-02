@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import {
   getVaultItems, addVaultItem, updateVaultItem, deleteVaultItem,
-  toggleStar, VAULT_CATEGORIES
+  toggleStar
 } from '../services/vaultService';
 import Navbar from '../components/layout/Navbar/Navbar';
 import Sidebar from '../components/layout/Sidebar/Sidebar';

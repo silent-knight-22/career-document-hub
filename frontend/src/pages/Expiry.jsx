@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlarmClock, Calendar } from 'lucide-react';
+import { AlarmClock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getVaultItems, updateVaultItem, getExpiryStatus } from '../services/vaultService';
@@ -8,6 +8,15 @@ import Navbar from '../components/layout/Navbar/Navbar';
 import Sidebar from '../components/layout/Sidebar/Sidebar';
 import ExpiryRow from '../components/expiry/ExpiryRow';
 import './Expiry.css';
+
+const SectionHeader = ({ color, emoji, label, count }) => (
+  count > 0 ? (
+    <div className="expiry-section-header">
+      <span style={{ color }}>{emoji} {label}</span>
+      <span className="expiry-section-count" style={{ background: `${color}18`, color }}>{count}</span>
+    </div>
+  ) : null
+);
 
 export default function ExpiryTracker() {
   const { user } = useAuth();
@@ -44,15 +53,6 @@ export default function ExpiryTracker() {
   const soon30   = allItems.filter((i) => i.status?.days >= 0 && i.status.days <= 30);
   const soon90   = allItems.filter((i) => i.status?.days > 30  && i.status.days <= 90);
   const safe     = allItems.filter((i) => i.status?.days > 90);
-
-  const SectionHeader = ({ color, emoji, label, count }) => (
-    count > 0 ? (
-      <div className="expiry-section-header">
-        <span style={{ color }}>{emoji} {label}</span>
-        <span className="expiry-section-count" style={{ background: `${color}18`, color }}>{count}</span>
-      </div>
-    ) : null
-  );
 
   return (
     <div className="app-layout">

@@ -15,12 +15,16 @@ export default function usePdfRenderer(doc) {
   useEffect(() => {
     if (!doc) return;
     if (doc.type === 'image') {
-      setDocImage(doc.dataUrl);
-      setLoadingPdf(false);
-      setPdfError(null);
+      Promise.resolve().then(() => {
+        setDocImage(doc.dataUrl);
+        setLoadingPdf(false);
+        setPdfError(null);
+      });
     } else if (doc.type === 'pdf') {
-      setLoadingPdf(true);
-      setPdfError(null);
+      Promise.resolve().then(() => {
+        setLoadingPdf(true);
+        setPdfError(null);
+      });
 
       const renderPdfPage = async () => {
         try {
@@ -71,7 +75,7 @@ export default function usePdfRenderer(doc) {
 
       renderPdfPage();
     }
-  }, [doc?.id, doc?.type, doc?.dataUrl]);
+  }, [doc]);
 
   return { docImage, loadingPdf, pdfError };
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+/* eslint-disable react-refresh/only-export-components */
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 export function isSectionComplete(section, data) {

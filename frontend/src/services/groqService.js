@@ -103,7 +103,7 @@ async function extractTextFromPdf(dataUrl) {
     return fullText;
   } catch (err) {
     console.error('[Groq] PDF text extraction failed:', err);
-    throw new Error('Failed to extract text from PDF file. Make sure it is not password-protected.');
+    throw new Error('Failed to extract text from PDF file. Make sure it is not password-protected.', { cause: err });
   }
 }
 
@@ -234,16 +234,20 @@ async function groqPost(messages, config = {}) {
     }
     if (res.status === 401) throw new Error('Invalid Groq API key. Please check your credentials.');
     if (res.status === 403) throw new Error(`Access Denied: ${msg}`);
-    if (res.status === 429) {
-      throw new Error(`Groq Rate limit / Quota exceeded: ${msg || 'Too many requests. Please wait a moment.'}`);
-    }
-    if (res.status === 400 && (
+    const isLimitError = 
       msg.toLowerCase().includes('request too large') || 
       msg.toLowerCase().includes('tpm') || 
       msg.toLowerCase().includes('token limit') || 
-      msg.toLowerCase().includes('context length')
-    )) {
-      throw new Error('This document is too large to analyze. Please choose a smaller or shorter document to proceed.');
+      msg.toLowerCase().includes('context length') ||
+      msg.toLowerCase().includes('rate limit') ||
+      msg.toLowerCase().includes('quota exceeded') ||
+      res.status === 413; // Payload Too Large
+
+    if (isLimitError) {
+      throw new Error('This document is too large to analyze. Please choose a smaller or shorter document, or try again in a moment.');
+    }
+    if (res.status === 429) {
+      throw new Error('Groq Rate limit exceeded. Please wait a moment before trying again.');
     }
     if (res.status >= 500) throw new Error(`Groq server error (${code}). Try again in a moment.`);
     throw new Error(msg || `API error: HTTP ${res.status}`);
@@ -271,11 +275,14 @@ function parseJSON(raw) {
       try {
         const nested = m[0].replace(/,\s*([\]}])/g, '$1');
         return JSON.parse(nested);
-      } catch {}
+      } catch {
+        /* fallback to raw regex extraction failed, proceed to root throw */
+      }
     }
     throw new Error(
       `JSON Parse Error: ${err.message}. To resolve this, change your preferred model ` +
-      `to "llama-3.3-70b-versatile" or "Auto-detect" to enforce native JSON Mode.`
+      `to "llama-3.3-70b-versatile" or "Auto-detect" to enforce native JSON Mode.`,
+      { cause: err }
     );
   }
 }
@@ -491,10 +498,10 @@ export async function analyzeDocument(dataUrl, onProgress) {
     onProgress?.({ step: 1, label: 'Extracting text from PDF client-side...' });
     docText = await extractTextFromPdf(dataUrl);
     
-    // Local size pre-check (Safe free tier limit: 36,000 characters)
-    const maxChars = 36000;
+    // Local size pre-check (Safe free tier limit: 15,000 characters)
+    const maxChars = 15000;
     if (docText.length > maxChars) {
-      throw new Error('This document is too large to analyze. Please select a shorter document or a smaller file (recommended maximum length: 30,000 characters).');
+      throw new Error('This document is too large to analyze. Please select a shorter document or a smaller file (recommended maximum length: 15,000 characters).');
     }
   } else {
     onProgress?.({ step: 1, label: 'Preparing image for analysis...' });
@@ -522,7 +529,7 @@ export async function analyzeDocument(dataUrl, onProgress) {
 
   onProgress?.({ step: 3, label: `Analyzing document (via Groq ${resolvedModel})...` });
 
-  let messages = [];
+  let messages;
   if (isPdf) {
     messages = [
       {
@@ -571,7 +578,7 @@ export async function analyzeDocument(dataUrl, onProgress) {
 // askQuestion — RAG-style Q&A using cached analysis as context
 // ════════════════════════════════════════════════════════════════
 export async function askQuestion(analysis, question, chatHistory) {
-  const context = buildRetrievalContext(analysis, question);
+  const context = buildRetrievalContext(analysis);
 
   const systemTurn = {
     role: 'system',
@@ -609,7 +616,7 @@ ANSWERING RULES:
 }
 
 // ── Build retrieval context from analysis ─────────────────────
-function buildRetrievalContext(analysis, question) {
+function buildRetrievalContext(analysis) {
   const parts = [];
   parts.push(`DOCUMENT TYPE: ${analysis.document_type || 'Unknown'}`);
   parts.push(`ISSUED/DATED: ${analysis.entities?.document_date || 'Not specified'}`);

@@ -1,17 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState } from 'react';
 import { getCurrentSession, logoutUser } from '../services/authService';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const session = getCurrentSession();
-    setUser(session);
-    setLoading(false);
-  }, []);
+  const [user, setUser] = useState(() => getCurrentSession());
+  const [loading] = useState(false);
 
   const login = (session) => setUser(session);
 

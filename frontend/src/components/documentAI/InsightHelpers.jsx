@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { useState } from 'react';
 import { ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 
 const SEV = {

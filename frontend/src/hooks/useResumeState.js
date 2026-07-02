@@ -16,13 +16,13 @@ export default function useResumeState(userId, printRef) {
   const [autosaveState, setAutosave] = useState('idle');
 
   useEffect(() => {
-    setAutosave('saving');
+    Promise.resolve().then(() => setAutosave('saving'));
     const t = setTimeout(() => {
       try {
         saveResume(userId, data);
         setAutosave('saved');
         setTimeout(() => setAutosave('idle'), 2000);
-      } catch (e) {
+      } catch {
         setAutosave('idle');
       }
     }, 1500);

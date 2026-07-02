@@ -7,7 +7,6 @@ import { getSignatures } from '../services/signatureService';
 import { getDocumentStats } from '../services/documentService';
 import Navbar from '../components/layout/Navbar/Navbar';
 import Sidebar from '../components/layout/Sidebar/Sidebar';
-import Button from '../components/common/Button/Button';
 import ThemeToggle from '../components/common/ThemeToggle/ThemeToggle';
 import DangerZone from '../components/profile/DangerZone';
 import DeleteAccountModal from '../components/profile/DeleteAccountModal';

@@ -24,10 +24,8 @@ export default function CreateSignature() {
   const navigate = useNavigate();
   const [tab, setTab]           = useState('draw');
   const [sigName, setSigName]   = useState('');
-  const [saving, setSaving]     = useState(false);
 
   const handleSave = async (dataUrl, type) => {
-    setSaving(true);
     try {
       saveSignature(user.userId, {
         name: sigName.trim() || `My Signature ${Date.now()}`,
@@ -38,8 +36,6 @@ export default function CreateSignature() {
       navigate('/signatures');
     } catch {
       toast.error('Failed to save signature');
-    } finally {
-      setSaving(false);
     }
   };
 
