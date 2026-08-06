@@ -3,30 +3,37 @@
   align-items: center;
   gap: 2px;
   background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
-  padding: 3px;
+  padding: 2px;
 }
 
 .theme-btn {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 12px;
+  padding: 5px 10px;
   border: none;
   background: transparent;
   color: var(--text-secondary);
   border-radius: var(--radius-full);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-family: var(--font-family);
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
   white-space: nowrap;
 }
 
 .theme-btn:hover {
   color: var(--text-primary);
-  background: var(--bg-card);
+}
+
+.theme-btn:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 
 .theme-btn.active {

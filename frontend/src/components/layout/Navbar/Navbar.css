@@ -82,6 +82,10 @@
   background: var(--bg-card-hover);
   color: var(--text-primary);
 }
+.navbar-icon-btn:focus-visible,
+.navbar-menu-btn:focus-visible {
+  box-shadow: var(--focus-ring);
+}
 
 .navbar-notif-dot {
   position: absolute;

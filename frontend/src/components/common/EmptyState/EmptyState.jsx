@@ -1,18 +1,22 @@
 /**
- * Reusable empty-state block (uses global .empty-state styles).
- * @param {{
- *   icon?: import('react').ReactNode,
- *   title: string,
- *   description?: string,
- *   action?: import('react').ReactNode,
- *   compact?: boolean,
- * }} props
+ * Reusable empty-state block.
  */
-export default function EmptyState({ icon, title, description, action, compact = false }) {
+export default function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+  compact = false,
+}) {
   return (
-    <div className="empty-state" style={compact ? { padding: '2rem' } : undefined}>
+    <div
+      className={`empty-state${compact ? ' empty-state-compact' : ''}`}
+      role="status"
+    >
       {icon != null && (
-        <div className={`empty-state-icon${compact ? '' : ' animate-float'}`}>{icon}</div>
+        <div className={`empty-state-icon${compact ? '' : ' animate-float'}`} aria-hidden="true">
+          {icon}
+        </div>
       )}
       <h3>{title}</h3>
       {description ? <p>{description}</p> : null}

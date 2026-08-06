@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
-  PenLine, FileText, Signature, TrendingUp, CheckCircle
+  PenLine, FileText, Signature, TrendingUp, CheckCircle, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getSignatures } from '../services/signatureService';
@@ -28,30 +28,32 @@ export default function Dashboard() {
 
   return (
     <PageLayout title="Dashboard">
-      {/* Welcome Banner */}
-      <div className="dashboard-banner animate-fade-in-up">
+      <section className="dashboard-banner animate-fade-in-up" aria-label="Welcome">
         <div className="dashboard-banner-text">
-          <h2>{greeting}, {firstName}! 👋</h2>
-          <p>Manage your digital signatures and documents all in one place.</p>
+          <p className="dashboard-banner-eyebrow">
+            <Sparkles size={12} aria-hidden="true" />
+            Career Document Hub
+          </p>
+          <h2>{greeting}, {firstName}</h2>
+          <p>Manage signatures, documents, and career credentials in one place.</p>
         </div>
         <div className="dashboard-banner-actions">
           <Link to="/signatures/create">
             <Button icon={PenLine} size="md">New Signature</Button>
           </Link>
           <Link to="/documents">
-            <Button variant="secondary" icon={FileText} size="md">Upload Document</Button>
+            <Button className="btn-on-brand" icon={FileText} size="md">Upload Document</Button>
           </Link>
         </div>
-      </div>
+      </section>
 
-      {/* Stats */}
-      <div className="stats-grid stagger-children">
+      <section className="stats-grid stagger-children" aria-label="Overview stats">
         <StatCard
           icon={Signature}
           label="Total Signatures"
           value={signatures.length}
           color="linear-gradient(135deg, #6366f1, #8b5cf6)"
-          trend={signatures.length === 0 ? 'Create your first one →' : `${signatures.length} saved`}
+          trend={signatures.length === 0 ? 'Create your first one' : `${signatures.length} saved`}
         />
         <StatCard
           icon={FileText}
@@ -72,29 +74,27 @@ export default function Dashboard() {
           label="Pending"
           value={stats.unsigned}
           color="linear-gradient(135deg, #f59e0b, #ef4444)"
-          trend={stats.unsigned > 0 ? 'Needs attention' : 'All caught up!'}
+          trend={stats.unsigned > 0 ? 'Needs attention' : 'All caught up'}
         />
-      </div>
+      </section>
 
-      {/* Recent Activity */}
-      <div className="dashboard-grid">
+      <section className="dashboard-grid" aria-label="Recent activity">
         <RecentSignatures recentSigs={recentSigs} />
         <RecentDocuments recentDocs={recentDocs} />
-      </div>
+      </section>
 
-      {/* Quick Actions */}
-      <div className="quick-actions animate-fade-in-up" style={{ animationDelay: '120ms' }}>
+      <section className="quick-actions animate-fade-in-up" style={{ animationDelay: '80ms' }} aria-label="Quick actions">
         <h3 className="section-title">Quick Actions</h3>
         <div className="quick-actions-grid">
           {[
-            { to: '/signatures/create', icon: PenLine,   label: 'Draw Signature',    desc: 'Use mouse or touch',          color: '#6366f1' },
-            { to: '/signatures/create', icon: Signature,  label: 'Upload Signature',  desc: 'From image file',             color: '#8b5cf6' },
-            { to: '/documents',         icon: FileText,   label: 'Sign Document',     desc: 'PDF, JPG, PNG',               color: '#3b82f6' },
-            { to: '/profile',           icon: TrendingUp, label: 'View Profile',      desc: 'Account settings',            color: '#10b981' },
+            { to: '/signatures/create', icon: PenLine,   label: 'Draw Signature',    desc: 'Mouse or touch',     color: '#6366f1' },
+            { to: '/signatures/create', icon: Signature,  label: 'Upload Signature',  desc: 'From image file',    color: '#8b5cf6' },
+            { to: '/documents',         icon: FileText,   label: 'Sign Document',     desc: 'PDF, JPG, PNG',      color: '#3b82f6' },
+            { to: '/profile',           icon: TrendingUp, label: 'View Profile',      desc: 'Account settings',   color: '#10b981' },
           ].map(({ to, icon: Icon, label, desc, color }) => (
-            <Link key={label} to={to} className="quick-action-card hover-lift">
-              <div className="quick-action-icon" style={{ background: color }}>
-                <Icon size={20} color="white" />
+            <Link key={label} to={to} className="quick-action-card">
+              <div className="quick-action-icon" style={{ background: color }} aria-hidden="true">
+                <Icon size={18} color="white" />
               </div>
               <div>
                 <p className="quick-action-label">{label}</p>
@@ -103,7 +103,7 @@ export default function Dashboard() {
             </Link>
           ))}
         </div>
-      </div>
+      </section>
     </PageLayout>
   );
 }

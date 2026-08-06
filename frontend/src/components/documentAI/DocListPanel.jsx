@@ -1,6 +1,7 @@
 import React from 'react';
-import { Brain, FileText, ChevronRight, Archive, RefreshCw, AlertCircle, CheckCheck, Key } from 'lucide-react';
+import { Brain, FileText, ChevronRight, Archive, RefreshCw, CheckCheck, Key } from 'lucide-react';
 import Button from '../common/Button/Button';
+import Alert from '../common/Alert/Alert';
 import { getCachedAnalysis } from '../../services/groqService';
 import { formatBytes } from '../../utils/files';
 
@@ -94,11 +95,27 @@ export default function DocListPanel({
           )}
 
           {analysisState === 'error' && (
-            <div className="ai-error-box">
-              <AlertCircle size={14} />
-              <p>{errorMsg}</p>
-              {errorMsg.includes('key') && <button onClick={() => setKeyModal(true)}>Update API key</button>}
-            </div>
+            <Alert tone="error">
+              <p style={{ margin: 0 }}>{errorMsg}</p>
+              {errorMsg.toLowerCase().includes('key') && (
+                <button
+                  type="button"
+                  onClick={() => setKeyModal(true)}
+                  style={{
+                    marginTop: '0.5rem',
+                    background: 'none',
+                    border: 'none',
+                    color: 'inherit',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    padding: 0,
+                  }}
+                >
+                  Update API key
+                </button>
+              )}
+            </Alert>
           )}
         </div>
       )}

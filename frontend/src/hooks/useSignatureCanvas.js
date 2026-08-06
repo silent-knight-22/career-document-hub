@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 /**
@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 export default function useSignatureCanvas(canvasRef, zoom, selectedSig) {
   const [placed, setPlaced] = useState([]);
   const [dragging, setDragging] = useState(null);
+  /** Blocks canvas add when a delete click would otherwise fall through to the canvas. */
+  const suppressAddRef = useRef(false);
 
   const clientPoint = (e) => ({
     x: e.clientX,
@@ -15,6 +17,10 @@ export default function useSignatureCanvas(canvasRef, zoom, selectedSig) {
   });
 
   const addSignature = (e) => {
+    if (suppressAddRef.current) return;
+    // Clicks on existing overlays / controls must never place a new stamp
+    if (e.target?.closest?.('.sig-overlay')) return;
+
     if (!selectedSig) {
       toast.error('Select a signature first');
       return;
@@ -36,13 +42,13 @@ export default function useSignatureCanvas(canvasRef, zoom, selectedSig) {
     ]);
   };
 
-  const handlePointerDown = (e, idx) => {
+  const handlePointerDown = (e, id) => {
     e.stopPropagation();
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const rect = e.currentTarget.getBoundingClientRect();
     const { x: cx, y: cy } = clientPoint(e);
     setDragging({
-      idx,
+      id,
       offsetX: cx - rect.left,
       offsetY: cy - rect.top,
     });
@@ -54,22 +60,28 @@ export default function useSignatureCanvas(canvasRef, zoom, selectedSig) {
     const containerRect = canvasRef.current.getBoundingClientRect();
     const x = (cx - containerRect.left) / zoom - dragging.offsetX;
     const y = (cy - containerRect.top) / zoom - dragging.offsetY;
-    setPlaced((prev) => prev.map((p, i) => (i === dragging.idx ? { ...p, x, y } : p)));
+    setPlaced((prev) =>
+      prev.map((p) => (p.id === dragging.id ? { ...p, x, y } : p)),
+    );
   };
 
   const handlePointerUp = () => {
     setDragging(null);
   };
 
-  const removeOverlay = (idx) => {
-    setPlaced((prev) => prev.filter((_, i) => i !== idx));
+  const removeOverlay = (id) => {
+    // Deleting unmounts the button; the trailing click can hit the canvas.
+    suppressAddRef.current = true;
+    setPlaced((prev) => prev.filter((p) => p.id !== id));
+    window.setTimeout(() => {
+      suppressAddRef.current = false;
+    }, 0);
   };
 
   return {
     placed,
     setPlaced,
     addSignature,
-    // Backward-compatible aliases used by SignDocument
     handleMouseDown: handlePointerDown,
     handleMouseMove: handlePointerMove,
     handleMouseUp: handlePointerUp,

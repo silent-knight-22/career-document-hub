@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getDocumentById } from '../services/documentService';
@@ -17,9 +17,11 @@ import './SignDocument.css';
 export default function SignDocument() {
   const { id } = useParams();
   const { user } = useAuth();
-  const navigate  = useNavigate();
-  const doc        = getDocumentById(user?.userId || '', id);
-  const signatures = getSignatures(user?.userId || '');
+  const navigate = useNavigate();
+  const userId = user?.userId || '';
+
+  const doc = useMemo(() => getDocumentById(userId, id), [userId, id]);
+  const signatures = useMemo(() => getSignatures(userId), [userId]);
   const canvasRef  = useRef(null);
   const imgRef     = useRef(null);
   const [selectedSig, setSelectedSig] = useState(
@@ -104,21 +106,28 @@ export default function SignDocument() {
             />
 
             {/* Placed signatures overlay */}
-            {placed.map((p, idx) => (
+            {placed.map((p) => (
               <SignatureOverlay
                 key={p.id}
                 p={p}
-                idx={idx}
                 signature={signatures.find((s) => s.id === p.sigId)}
                 onMouseDown={handleMouseDown}
                 onRemove={removeOverlay}
-                onResize={(e, index, startW, startH) => {
+                onResize={(e, placedId, startW, startH) => {
                   const startX = e.clientX;
                   const onMove = (me) => {
                     const dw = me.clientX - startX;
-                    setPlaced((prev) => prev.map((pp, i) =>
-                      i === index ? { ...pp, w: Math.max(60, startW + dw), h: Math.max(30, startH + dw * 0.375) } : pp
-                    ));
+                    setPlaced((prev) =>
+                      prev.map((pp) =>
+                        pp.id === placedId
+                          ? {
+                              ...pp,
+                              w: Math.max(60, startW + dw),
+                              h: Math.max(30, startH + dw * 0.375),
+                            }
+                          : pp,
+                      ),
+                    );
                   };
                   const onUp = () => {
                     window.removeEventListener('pointermove', onMove);
