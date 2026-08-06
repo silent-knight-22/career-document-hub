@@ -4,8 +4,8 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getVaultItems, updateVaultItem, getExpiryStatus } from '../services/vaultService';
 import { getCertificates, getCertExpiryStatus } from '../services/certificateService';
-import Navbar from '../components/layout/Navbar/Navbar';
-import Sidebar from '../components/layout/Sidebar/Sidebar';
+import PageLayout from '../components/layout/PageLayout/PageLayout';
+import EmptyState from '../components/common/EmptyState/EmptyState';
 import ExpiryRow from '../components/expiry/ExpiryRow';
 import './Expiry.css';
 
@@ -55,67 +55,62 @@ export default function ExpiryTracker() {
   const safe     = allItems.filter((i) => i.status?.days > 90);
 
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
-        <Navbar title="Expiry Tracker" />
-        <div className="page-container">
-
-          <div className="page-header animate-fade-in-up">
-            <div>
-              <h2>Expiry Tracker</h2>
-              <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                Tracking {allItems.length} item{allItems.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-          </div>
-
-          {/* Summary cards */}
-          {allItems.length > 0 && (
-            <div className="expiry-summary animate-fade-in-up" style={{ animationDelay: '40ms' }}>
-              {[
-                { label: 'Expired',    count: expired.length,  color: '#ef4444', bg: '#fee2e2', emoji: '🔴' },
-                { label: 'Due <30d',   count: soon30.length,   color: '#f59e0b', bg: '#fef3c7', emoji: '🟠' },
-                { label: 'Due <90d',   count: soon90.length,   color: '#3b82f6', bg: '#dbeafe', emoji: '🟡' },
-                { label: 'All Good',   count: safe.length,     color: '#10b981', bg: '#d1fae5', emoji: '🟢' },
-              ].map(({ label, count, color, bg, emoji }) => (
-                <div key={label} className="expiry-stat" style={{ borderColor: `${color}30`, background: bg }}>
-                  <span className="expiry-stat-emoji">{emoji}</span>
-                  <span className="expiry-stat-count" style={{ color }}>{count}</span>
-                  <span className="expiry-stat-label" style={{ color }}>{label}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {allItems.length === 0 ? (
-            <div className="card animate-fade-in-up">
-              <div className="empty-state">
-                <div className="empty-state-icon animate-float"><AlarmClock size={32} /></div>
-                <h3>No expiry dates tracked</h3>
-                <p>
-                  When you add documents to your <strong>Vault</strong> or <strong>Certificates</strong> with an expiry date,
-                  they'll appear here so you never miss a renewal.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="expiry-list animate-fade-in-up card" style={{ animationDelay: '80ms', padding: 0, overflow: 'hidden' }}>
-              <SectionHeader emoji="🔴" label="Expired" color="#ef4444" count={expired.length} />
-              {expired.map((i) => <ExpiryRow key={i.id} item={i} source={i.source} status={i.status} onRemoveExpiry={handleRemoveExpiry} />)}
-
-              <SectionHeader emoji="🟠" label="Expiring in 30 days" color="#f59e0b" count={soon30.length} />
-              {soon30.map((i) => <ExpiryRow key={i.id} item={i} source={i.source} status={i.status} onRemoveExpiry={handleRemoveExpiry} />)}
-
-              <SectionHeader emoji="🟡" label="Expiring in 90 days" color="#3b82f6" count={soon90.length} />
-              {soon90.map((i) => <ExpiryRow key={i.id} item={i} source={i.source} status={i.status} onRemoveExpiry={handleRemoveExpiry} />)}
-
-              <SectionHeader emoji="🟢" label="All Good" color="#10b981" count={safe.length} />
-              {safe.map((i) => <ExpiryRow key={i.id} item={i} source={i.source} status={i.status} onRemoveExpiry={handleRemoveExpiry} />)}
-            </div>
-          )}
+    <PageLayout title="Expiry Tracker">
+      <div className="page-header animate-fade-in-up">
+        <div>
+          <h2>Expiry Tracker</h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            Tracking {allItems.length} item{allItems.length !== 1 ? 's' : ''}
+          </p>
         </div>
       </div>
-    </div>
+
+      {/* Summary cards */}
+      {allItems.length > 0 && (
+        <div className="expiry-summary animate-fade-in-up" style={{ animationDelay: '40ms' }}>
+          {[
+            { label: 'Expired',    count: expired.length,  color: '#ef4444', bg: '#fee2e2', emoji: '🔴' },
+            { label: 'Due <30d',   count: soon30.length,   color: '#f59e0b', bg: '#fef3c7', emoji: '🟠' },
+            { label: 'Due <90d',   count: soon90.length,   color: '#3b82f6', bg: '#dbeafe', emoji: '🟡' },
+            { label: 'All Good',   count: safe.length,     color: '#10b981', bg: '#d1fae5', emoji: '🟢' },
+          ].map(({ label, count, color, bg, emoji }) => (
+            <div key={label} className="expiry-stat" style={{ borderColor: `${color}30`, background: bg }}>
+              <span className="expiry-stat-emoji">{emoji}</span>
+              <span className="expiry-stat-count" style={{ color }}>{count}</span>
+              <span className="expiry-stat-label" style={{ color }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {allItems.length === 0 ? (
+        <div className="card animate-fade-in-up">
+          <EmptyState
+            icon={<AlarmClock size={32} />}
+            title="No expiry dates tracked"
+            description={
+              <>
+                When you add documents to your <strong>Vault</strong> or <strong>Certificates</strong> with an expiry date,
+                they'll appear here so you never miss a renewal.
+              </>
+            }
+          />
+        </div>
+      ) : (
+        <div className="expiry-list animate-fade-in-up card" style={{ animationDelay: '80ms', padding: 0, overflow: 'hidden' }}>
+          <SectionHeader emoji="🔴" label="Expired" color="#ef4444" count={expired.length} />
+          {expired.map((i) => <ExpiryRow key={i.id} item={i} source={i.source} status={i.status} onRemoveExpiry={handleRemoveExpiry} />)}
+
+          <SectionHeader emoji="🟠" label="Expiring in 30 days" color="#f59e0b" count={soon30.length} />
+          {soon30.map((i) => <ExpiryRow key={i.id} item={i} source={i.source} status={i.status} onRemoveExpiry={handleRemoveExpiry} />)}
+
+          <SectionHeader emoji="🟡" label="Expiring in 90 days" color="#3b82f6" count={soon90.length} />
+          {soon90.map((i) => <ExpiryRow key={i.id} item={i} source={i.source} status={i.status} onRemoveExpiry={handleRemoveExpiry} />)}
+
+          <SectionHeader emoji="🟢" label="All Good" color="#10b981" count={safe.length} />
+          {safe.map((i) => <ExpiryRow key={i.id} item={i} source={i.source} status={i.status} onRemoveExpiry={handleRemoveExpiry} />)}
+        </div>
+      )}
+    </PageLayout>
   );
 }

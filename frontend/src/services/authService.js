@@ -1,16 +1,15 @@
-// ============================================
-// AUTH SERVICE — localStorage layer
-// (Week 2: swap these calls for axios → Spring Boot)
-// ============================================
+/**
+ * Auth service — localStorage layer (JWT cutover via api/client later).
+ */
 
-const USERS_KEY = 'cdh_users';
-const SESSION_KEY = 'cdh_session';
+import { clearUserLocalData, STORAGE_KEYS } from '../api/storage/keys';
+import { readJson, writeJson, safeJsonParse } from '../utils/jsonStorage';
+import { getDocuments } from './documentService';
+import { getVaultItems } from './vaultService';
 
-// ---- Helpers ----
-const getUsers = () => JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-const setUsers = (users) => localStorage.setItem(USERS_KEY, JSON.stringify(users));
+const getUsers = () => readJson(STORAGE_KEYS.USERS, []);
+const setUsers = (users) => writeJson(STORAGE_KEYS.USERS, users);
 
-// ---- Register ----
 export const registerUser = ({ name, email, password }) => {
   const users = getUsers();
   const existing = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
@@ -20,61 +19,54 @@ export const registerUser = ({ name, email, password }) => {
     id: crypto.randomUUID(),
     name,
     email: email.toLowerCase(),
-    password, // NOTE: plain text — Week 2 will use bcrypt + JWT
+    password, // NOTE: plain text — backend will use bcrypt + JWT
     avatar: null,
     createdAt: new Date().toISOString(),
   };
   users.push(newUser);
   setUsers(users);
 
-  // Auto-login after register
   const session = { userId: newUser.id, name: newUser.name, email: newUser.email };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  writeJson(STORAGE_KEYS.SESSION, session);
   return session;
 };
 
-// ---- Login ----
 export const loginUser = ({ email, password, remember }) => {
   const users = getUsers();
   const user = users.find(
-    (u) => u.email === email.toLowerCase() && u.password === password
+    (u) => u.email === email.toLowerCase() && u.password === password,
   );
   if (!user) throw new Error('Invalid email or password.');
 
   const session = { userId: user.id, name: user.name, email: user.email };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  writeJson(STORAGE_KEYS.SESSION, session);
 
   if (remember) {
-    localStorage.setItem('cdh_remember', email.toLowerCase());
+    localStorage.setItem(STORAGE_KEYS.REMEMBER, email.toLowerCase());
   } else {
-    localStorage.removeItem('cdh_remember');
+    localStorage.removeItem(STORAGE_KEYS.REMEMBER);
   }
 
   return session;
 };
 
-// ---- Logout ----
 export const logoutUser = () => {
-  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(STORAGE_KEYS.SESSION);
 };
 
-// ---- Get current session ----
 export const getCurrentSession = () => {
-  const raw = localStorage.getItem(SESSION_KEY);
-  return raw ? JSON.parse(raw) : null;
+  const raw = localStorage.getItem(STORAGE_KEYS.SESSION);
+  return raw ? safeJsonParse(raw, null) : null;
 };
 
-// ---- Get user profile ----
 export const getUserProfile = (userId) => {
-  const users = getUsers();
-  const user = users.find((u) => u.id === userId);
+  const user = getUsers().find((u) => u.id === userId);
   if (!user) return null;
   const safeUser = { ...user };
   delete safeUser.password;
   return safeUser;
 };
 
-// ---- Update profile ----
 export const updateUserProfile = (userId, updates) => {
   const users = getUsers();
   const idx = users.findIndex((u) => u.id === userId);
@@ -82,22 +74,23 @@ export const updateUserProfile = (userId, updates) => {
   users[idx] = { ...users[idx], ...updates };
   setUsers(users);
 
-  // Update session name if name changed
   const session = getCurrentSession();
   if (session && updates.name) {
-    const updatedSession = { ...session, name: updates.name };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(updatedSession));
+    writeJson(STORAGE_KEYS.SESSION, { ...session, name: updates.name });
   }
   return getUserProfile(userId);
 };
 
-// ---- Delete account ----
 export const deleteAccount = (userId) => {
-  let users = getUsers();
-  users = users.filter((u) => u.id !== userId);
-  setUsers(users);
+  const docIds = [
+    ...getDocuments(userId).map((d) => d.id),
+    ...getVaultItems(userId).map((d) => d.id),
+  ];
+
+  clearUserLocalData(userId, { documentIds: docIds });
+
+  setUsers(getUsers().filter((u) => u.id !== userId));
   logoutUser();
 };
 
-// ---- Get remembered email ----
-export const getRememberedEmail = () => localStorage.getItem('cdh_remember') || '';
+export const getRememberedEmail = () => localStorage.getItem(STORAGE_KEYS.REMEMBER) || '';

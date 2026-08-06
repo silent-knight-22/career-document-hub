@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Signature, Clock, Plus, ArrowRight } from 'lucide-react';
 import Button from '../common/Button/Button';
+import EmptyState from '../common/EmptyState/EmptyState';
 
 export default function RecentSignatures({ recentSigs }) {
   return (
@@ -17,14 +18,17 @@ export default function RecentSignatures({ recentSigs }) {
       </div>
       <div className="card-body">
         {recentSigs.length === 0 ? (
-          <div className="empty-state" style={{ padding: '2rem' }}>
-            <div className="empty-state-icon"><Signature size={28} /></div>
-            <h3>No signatures yet</h3>
-            <p>Create your first digital signature</p>
-            <Link to="/signatures/create">
-              <Button variant="outline" size="sm" icon={Plus}>Create Signature</Button>
-            </Link>
-          </div>
+          <EmptyState
+            compact
+            icon={<Signature size={28} />}
+            title="No signatures yet"
+            description="Create your first digital signature"
+            action={
+              <Link to="/signatures/create">
+                <Button variant="outline" size="sm" icon={Plus}>Create Signature</Button>
+              </Link>
+            }
+          />
         ) : (
           <div className="recent-list">
             {recentSigs.map((sig) => (

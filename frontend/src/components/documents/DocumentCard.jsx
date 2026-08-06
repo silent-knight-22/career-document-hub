@@ -1,13 +1,7 @@
 import React from 'react';
 import { FileText, Clock, PenLine, Download, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import Button from '../common/Button/Button';
-
-function formatBytes(bytes) {
-  if (!bytes) return '0 B';
-  const k = 1024;
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${['B', 'KB', 'MB'][i]}`;
-}
+import { formatBytes } from '../../utils/files';
 
 export default function DocumentCard({ doc, onSign, onDownload, onDelete }) {
   return (

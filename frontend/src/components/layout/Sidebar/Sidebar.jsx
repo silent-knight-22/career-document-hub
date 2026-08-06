@@ -2,9 +2,10 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, PenLine, FileText, User, LogOut,
   Signature, ChevronRight, Archive, Award, AlarmClock,
-  FileEdit, Brain
+  FileEdit, Brain,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { useLayout } from '../../../context/LayoutContext';
 import './Sidebar.css';
 
 const navGroups = [
@@ -17,19 +18,19 @@ const navGroups = [
   {
     label: 'Documents',
     items: [
-      { to: '/vault',        icon: Archive,    label: 'Document Vault' },
-      { to: '/documents',    icon: FileText,   label: 'Sign Documents' },
-      { to: '/certificates', icon: Award,      label: 'Certificates' },
-      { to: '/expiry',       icon: AlarmClock, label: 'Expiry Tracker' },
-      { to: '/ai',           icon: Brain,      label: 'AI Insights',   badge: 'AI' },
+      { to: '/vault', icon: Archive, label: 'Document Vault' },
+      { to: '/documents', icon: FileText, label: 'Sign Documents' },
+      { to: '/certificates', icon: Award, label: 'Certificates' },
+      { to: '/expiry', icon: AlarmClock, label: 'Expiry Tracker' },
+      { to: '/ai', icon: Brain, label: 'AI Insights', badge: 'AI' },
     ],
   },
   {
     label: 'Create',
     items: [
-      { to: '/resume',            icon: FileEdit,  label: 'Resume Builder' },
-      { to: '/signatures/create', icon: PenLine,   label: 'Create Signature' },
-      { to: '/signatures',        icon: Signature, label: 'My Signatures' },
+      { to: '/resume', icon: FileEdit, label: 'Resume Builder' },
+      { to: '/signatures/create', icon: PenLine, label: 'Create Signature' },
+      { to: '/signatures', icon: Signature, label: 'My Signatures' },
     ],
   },
   {
@@ -42,6 +43,7 @@ const navGroups = [
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
+  const { sidebarOpen, closeSidebar } = useLayout();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -54,8 +56,7 @@ export default function Sidebar() {
     : '?';
 
   return (
-    <aside className="sidebar">
-      {/* Logo */}
+    <aside className={`sidebar${sidebarOpen ? ' is-open' : ''}`}>
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon">
           <Signature size={22} color="white" />
@@ -66,7 +67,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="sidebar-nav" aria-label="Main navigation">
         {navGroups.map((group) => (
           <div key={group.label} className="sidebar-group">
@@ -77,20 +77,14 @@ export default function Sidebar() {
                   <NavLink
                     to={to}
                     end={end}
+                    onClick={closeSidebar}
                     className={({ isActive }) =>
                       `sidebar-link ${isActive ? 'active' : ''}`
                     }
                   >
                     <Icon size={17} />
                     <span>{label}</span>
-                    {badge && (
-                      <span style={{
-                        marginLeft: 'auto', fontSize: '0.58rem', fontWeight: 800,
-                        background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                        color: 'white', padding: '1px 6px', borderRadius: '999px',
-                        letterSpacing: '0.04em',
-                      }}>{badge}</span>
-                    )}
+                    {badge && <span className="sidebar-link-badge">{badge}</span>}
                     {!badge && <ChevronRight size={13} className="sidebar-link-arrow" />}
                   </NavLink>
                 </li>
@@ -100,7 +94,6 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom user area */}
       <div className="sidebar-footer">
         <div className="sidebar-user">
           <div className="sidebar-avatar">{initials}</div>
@@ -109,7 +102,13 @@ export default function Sidebar() {
             <p className="sidebar-user-email">{user?.email || ''}</p>
           </div>
         </div>
-        <button className="sidebar-logout" onClick={handleLogout} title="Log out">
+        <button
+          type="button"
+          className="sidebar-logout"
+          onClick={handleLogout}
+          aria-label="Log out"
+          title="Log out"
+        >
           <LogOut size={16} />
         </button>
       </div>

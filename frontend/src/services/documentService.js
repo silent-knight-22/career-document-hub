@@ -1,52 +1,41 @@
-// ============================================
-// DOCUMENT SERVICE — localStorage layer
-// (Week 2: swap for axios → Spring Boot REST APIs)
-// ============================================
+/**
+ * Signable documents service — facade over createUserStore.
+ */
 
-const getKey = (userId) => `cdh_documents_${userId}`;
+import { createUserStore } from '../api/storage/createUserStore';
+import { STORAGE_KEYS } from '../api/storage/keys';
 
-export const getDocuments = (userId) => {
-  return JSON.parse(localStorage.getItem(getKey(userId)) || '[]');
-};
+const store = createUserStore(STORAGE_KEYS.DOCUMENTS);
 
-const save = (userId, docs) => {
-  localStorage.setItem(getKey(userId), JSON.stringify(docs));
-};
+export const getDocuments = (userId) => store.getAll(userId);
 
 export const saveDocument = (userId, { name, dataUrl, type, size }) => {
-  const docs = getDocuments(userId);
   const newDoc = {
     id: crypto.randomUUID(),
     name,
-    dataUrl,   // base64
-    type,      // 'pdf' | 'image'
-    size,      // bytes
+    dataUrl,
+    type,
+    size,
     signed: false,
     signedDataUrl: null,
     createdAt: new Date().toISOString(),
     signedAt: null,
   };
-  docs.push(newDoc);
-  save(userId, docs);
-  return newDoc;
+  return store.insert(userId, newDoc);
 };
 
-export const getDocumentById = (userId, docId) => {
-  return getDocuments(userId).find((d) => d.id === docId) || null;
-};
+export const getDocumentById = (userId, docId) => store.getById(userId, docId);
 
 export const saveSignedDocument = (userId, docId, signedDataUrl) => {
-  const docs = getDocuments(userId).map((d) =>
-    d.id === docId
-      ? { ...d, signed: true, signedDataUrl, signedAt: new Date().toISOString() }
-      : d
-  );
-  save(userId, docs);
+  store.update(userId, docId, {
+    signed: true,
+    signedDataUrl,
+    signedAt: new Date().toISOString(),
+  });
 };
 
 export const deleteDocument = (userId, docId) => {
-  const docs = getDocuments(userId).filter((d) => d.id !== docId);
-  save(userId, docs);
+  store.remove(userId, docId);
 };
 
 export const getDocumentStats = (userId) => {

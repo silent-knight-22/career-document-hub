@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, Clock, Plus, ArrowRight } from 'lucide-react';
 import Button from '../common/Button/Button';
+import EmptyState from '../common/EmptyState/EmptyState';
 
 export default function RecentDocuments({ recentDocs }) {
   return (
@@ -17,14 +18,17 @@ export default function RecentDocuments({ recentDocs }) {
       </div>
       <div className="card-body">
         {recentDocs.length === 0 ? (
-          <div className="empty-state" style={{ padding: '2rem' }}>
-            <div className="empty-state-icon"><FileText size={28} /></div>
-            <h3>No documents yet</h3>
-            <p>Upload a document to sign it digitally</p>
-            <Link to="/documents">
-              <Button variant="outline" size="sm" icon={Plus}>Upload Document</Button>
-            </Link>
-          </div>
+          <EmptyState
+            compact
+            icon={<FileText size={28} />}
+            title="No documents yet"
+            description="Upload a document to sign it digitally"
+            action={
+              <Link to="/documents">
+                <Button variant="outline" size="sm" icon={Plus}>Upload Document</Button>
+              </Link>
+            }
+          />
         ) : (
           <div className="recent-list">
             {recentDocs.map((doc) => (

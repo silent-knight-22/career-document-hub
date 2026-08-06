@@ -6,9 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import {
   getSignatures, deleteSignature, setDefaultSignature
 } from '../services/signatureService';
-import Navbar from '../components/layout/Navbar/Navbar';
-import Sidebar from '../components/layout/Sidebar/Sidebar';
+import PageLayout from '../components/layout/PageLayout/PageLayout';
 import Button from '../components/common/Button/Button';
+import EmptyState from '../components/common/EmptyState/EmptyState';
 import Modal from '../components/common/Modal/Modal';
 import SignatureCard from '../components/signature/SignatureCard';
 import './MySignatures.css';
@@ -42,58 +42,53 @@ export default function MySignatures() {
   };
 
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
-        <Navbar title="My Signatures" />
-        <div className="page-container">
-
-          <div className="page-header animate-fade-in-up">
-            <div>
-              <h2>My Signatures</h2>
-              <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                {signatures.length} signature{signatures.length !== 1 ? 's' : ''} saved
-              </p>
-            </div>
-            <Link to="/signatures/create">
-              <Button icon={Plus}>New Signature</Button>
-            </Link>
-          </div>
-
-          {signatures.length === 0 ? (
-            <div className="card animate-fade-in-up">
-              <div className="empty-state">
-                <div className="empty-state-icon animate-float"><Signature size={32} /></div>
-                <h3>No signatures yet</h3>
-                <p>Create your first digital signature using our drawing canvas, image upload, or type-to-sign feature</p>
-                <Link to="/signatures/create">
-                  <Button icon={PenLine}>Create Your First Signature</Button>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="signatures-grid stagger-children">
-              {signatures.map((sig) => (
-                <SignatureCard
-                  key={sig.id}
-                  sig={sig}
-                  onSetDefault={handleSetDefault}
-                  onDownload={handleDownload}
-                  onDelete={setDeleteTarget}
-                />
-              ))}
-
-              {/* Add new card */}
-              <Link to="/signatures/create" className="sig-add-card card hover-lift">
-                <div className="sig-add-inner">
-                  <Plus size={24} />
-                  <p>Add Signature</p>
-                </div>
-              </Link>
-            </div>
-          )}
+    <PageLayout title="My Signatures">
+      <div className="page-header animate-fade-in-up">
+        <div>
+          <h2>My Signatures</h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            {signatures.length} signature{signatures.length !== 1 ? 's' : ''} saved
+          </p>
         </div>
+        <Link to="/signatures/create">
+          <Button icon={Plus}>New Signature</Button>
+        </Link>
       </div>
+
+      {signatures.length === 0 ? (
+        <div className="card animate-fade-in-up">
+          <EmptyState
+            icon={<Signature size={32} />}
+            title="No signatures yet"
+            description="Create your first digital signature using our drawing canvas, image upload, or type-to-sign feature"
+            action={
+              <Link to="/signatures/create">
+                <Button icon={PenLine}>Create Your First Signature</Button>
+              </Link>
+            }
+          />
+        </div>
+      ) : (
+        <div className="signatures-grid stagger-children">
+          {signatures.map((sig) => (
+            <SignatureCard
+              key={sig.id}
+              sig={sig}
+              onSetDefault={handleSetDefault}
+              onDownload={handleDownload}
+              onDelete={setDeleteTarget}
+            />
+          ))}
+
+          {/* Add new card */}
+          <Link to="/signatures/create" className="sig-add-card card hover-lift">
+            <div className="sig-add-inner">
+              <Plus size={24} />
+              <p>Add Signature</p>
+            </div>
+          </Link>
+        </div>
+      )}
 
       {/* Delete confirmation */}
       <Modal
@@ -111,6 +106,6 @@ export default function MySignatures() {
           <Button variant="danger" onClick={handleDelete} icon={Trash2}>Delete</Button>
         </div>
       </Modal>
-    </div>
+    </PageLayout>
   );
 }

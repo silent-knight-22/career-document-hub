@@ -1,18 +1,28 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
+/**
+ * Signature placement / drag on the document canvas.
+ * Uses Pointer Events so mouse and touch share one path.
+ */
 export default function useSignatureCanvas(canvasRef, zoom, selectedSig) {
   const [placed, setPlaced] = useState([]);
   const [dragging, setDragging] = useState(null);
+
+  const clientPoint = (e) => ({
+    x: e.clientX,
+    y: e.clientY,
+  });
 
   const addSignature = (e) => {
     if (!selectedSig) {
       toast.error('Select a signature first');
       return;
     }
+    const { x: cx, y: cy } = clientPoint(e);
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / zoom;
-    const y = (e.clientY - rect.top) / zoom;
+    const x = (cx - rect.left) / zoom;
+    const y = (cy - rect.top) / zoom;
     setPlaced((prev) => [
       ...prev,
       {
@@ -21,26 +31,33 @@ export default function useSignatureCanvas(canvasRef, zoom, selectedSig) {
         x: x - 80,
         y: y - 30,
         w: 160,
-        h: 60
-      }
+        h: 60,
+      },
     ]);
   };
 
-  const handleMouseDown = (e, idx) => {
+  const handlePointerDown = (e, idx) => {
     e.stopPropagation();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     const rect = e.currentTarget.getBoundingClientRect();
-    setDragging({ idx, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top });
+    const { x: cx, y: cy } = clientPoint(e);
+    setDragging({
+      idx,
+      offsetX: cx - rect.left,
+      offsetY: cy - rect.top,
+    });
   };
 
-  const handleMouseMove = (e) => {
-    if (dragging === null) return;
+  const handlePointerMove = (e) => {
+    if (dragging === null || !canvasRef.current) return;
+    const { x: cx, y: cy } = clientPoint(e);
     const containerRect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - containerRect.left) / zoom - dragging.offsetX;
-    const y = (e.clientY - containerRect.top) / zoom - dragging.offsetY;
+    const x = (cx - containerRect.left) / zoom - dragging.offsetX;
+    const y = (cy - containerRect.top) / zoom - dragging.offsetY;
     setPlaced((prev) => prev.map((p, i) => (i === dragging.idx ? { ...p, x, y } : p)));
   };
 
-  const handleMouseUp = () => {
+  const handlePointerUp = () => {
     setDragging(null);
   };
 
@@ -52,9 +69,13 @@ export default function useSignatureCanvas(canvasRef, zoom, selectedSig) {
     placed,
     setPlaced,
     addSignature,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
-    removeOverlay
+    // Backward-compatible aliases used by SignDocument
+    handleMouseDown: handlePointerDown,
+    handleMouseMove: handlePointerMove,
+    handleMouseUp: handlePointerUp,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    removeOverlay,
   };
 }

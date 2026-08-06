@@ -3,9 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getDocumentById } from '../services/documentService';
 import { getSignatures } from '../services/signatureService';
-import Navbar from '../components/layout/Navbar/Navbar';
-import Sidebar from '../components/layout/Sidebar/Sidebar';
+import PageLayout from '../components/layout/PageLayout/PageLayout';
 import Button from '../components/common/Button/Button';
+import EmptyState from '../components/common/EmptyState/EmptyState';
 import SignaturePanel from '../components/documents/SignaturePanel';
 import SignatureOverlay from '../components/documents/SignatureOverlay';
 import CanvasBackground from '../components/documents/CanvasBackground';
@@ -39,18 +39,14 @@ export default function SignDocument() {
   } = useSignatureCanvas(canvasRef, zoom, selectedSig);
   if (!doc) {
     return (
-      <div className="app-layout">
-        <Sidebar />
-        <div className="main-content">
-          <Navbar title="Sign Document" />
-          <div className="page-container">
-            <div className="card empty-state">
-              <h3>Document not found</h3>
-              <Button onClick={() => navigate('/documents')}>Back to Documents</Button>
-            </div>
-          </div>
+      <PageLayout title="Sign Document">
+        <div className="card">
+          <EmptyState
+            title="Document not found"
+            action={<Button onClick={() => navigate('/documents')}>Back to Documents</Button>}
+          />
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
@@ -72,77 +68,70 @@ export default function SignDocument() {
   };
 
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
-        <Navbar title={`Sign: ${doc.name}`} />
-        <div className="sign-layout">
+    <PageLayout title={`Sign: ${doc.name}`} className="sign-layout">
+      <SignaturePanel
+        signatures={signatures}
+        selectedSig={selectedSig}
+        onSelectSig={setSelectedSig}
+        onCreateSigClick={() => navigate('/signatures/create')}
+        zoom={zoom}
+        setZoom={setZoom}
+        placedCount={placed.length}
+        onExport={exportSigned}
+        saving={saving}
+      />
 
-          <SignaturePanel
-            signatures={signatures}
-            selectedSig={selectedSig}
-            onSelectSig={setSelectedSig}
-            onCreateSigClick={() => navigate('/signatures/create')}
-            zoom={zoom}
-            setZoom={setZoom}
-            placedCount={placed.length}
-            onExport={exportSigned}
-            saving={saving}
-          />
+      {/* Document Canvas */}
+      <main className="sign-canvas-area">
+        <div
+          className="sign-doc-scroll"
+          onPointerMove={handleMouseMove}
+          onPointerUp={handleMouseUp}
+          onPointerLeave={handleMouseUp}
+        >
+          <div
+            ref={canvasRef}
+            className="sign-doc-canvas"
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', cursor: selectedSig ? 'crosshair' : 'default' }}
+            onClick={addSignature}
+          >
+            <CanvasBackground
+              loadingPdf={loadingPdf}
+              pdfError={pdfError}
+              docImage={docImage}
+              docName={doc.name}
+              imgRef={imgRef}
+            />
 
-          {/* Document Canvas */}
-          <main className="sign-canvas-area">
-            <div
-              className="sign-doc-scroll"
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-            >
-              <div
-                ref={canvasRef}
-                className="sign-doc-canvas"
-                style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', cursor: selectedSig ? 'crosshair' : 'default' }}
-                onClick={addSignature}
-              >
-                <CanvasBackground
-                  loadingPdf={loadingPdf}
-                  pdfError={pdfError}
-                  docImage={docImage}
-                  docName={doc.name}
-                  imgRef={imgRef}
-                />
-
-                {/* Placed signatures overlay */}
-                {placed.map((p, idx) => (
-                  <SignatureOverlay
-                    key={p.id}
-                    p={p}
-                    idx={idx}
-                    signature={signatures.find((s) => s.id === p.sigId)}
-                    onMouseDown={handleMouseDown}
-                    onRemove={removeOverlay}
-                    onResize={(e, index, startW, startH) => {
-                      const startX = e.clientX;
-                      const onMove = (me) => {
-                        const dw = me.clientX - startX;
-                        setPlaced((prev) => prev.map((pp, i) =>
-                          i === index ? { ...pp, w: Math.max(60, startW + dw), h: Math.max(30, startH + dw * 0.375) } : pp
-                        ));
-                      };
-                      const onUp = () => {
-                        window.removeEventListener('mousemove', onMove);
-                        window.removeEventListener('mouseup', onUp);
-                      };
-                      window.addEventListener('mousemove', onMove);
-                      window.addEventListener('mouseup', onUp);
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </main>
-
+            {/* Placed signatures overlay */}
+            {placed.map((p, idx) => (
+              <SignatureOverlay
+                key={p.id}
+                p={p}
+                idx={idx}
+                signature={signatures.find((s) => s.id === p.sigId)}
+                onMouseDown={handleMouseDown}
+                onRemove={removeOverlay}
+                onResize={(e, index, startW, startH) => {
+                  const startX = e.clientX;
+                  const onMove = (me) => {
+                    const dw = me.clientX - startX;
+                    setPlaced((prev) => prev.map((pp, i) =>
+                      i === index ? { ...pp, w: Math.max(60, startW + dw), h: Math.max(30, startH + dw * 0.375) } : pp
+                    ));
+                  };
+                  const onUp = () => {
+                    window.removeEventListener('pointermove', onMove);
+                    window.removeEventListener('pointerup', onUp);
+                  };
+                  window.addEventListener('pointermove', onMove);
+                  window.addEventListener('pointerup', onUp);
+                }}
+              />
+            ))}
+          </div>
         </div>
-      </div>
-    </div>
+      </main>
+    </PageLayout>
   );
 }

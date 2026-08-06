@@ -1,11 +1,19 @@
-// ============================================
-// RESUME SERVICE — localStorage layer
-// ============================================
+import { STORAGE_KEYS } from '../api/storage/keys';
+import { readJson, writeJson } from '../utils/jsonStorage';
 
-const getKey = (userId) => `cdh_resume_${userId}`;
+const keyFor = (userId) => `${STORAGE_KEYS.RESUME}${userId}`;
 
 export const RESUME_DEFAULTS = {
-  personal: { name: '', email: '', phone: '', location: '', linkedin: '', github: '', website: '', summary: '' },
+  personal: {
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    linkedin: '',
+    github: '',
+    website: '',
+    summary: '',
+  },
   education: [],
   experience: [],
   projects: [],
@@ -14,10 +22,8 @@ export const RESUME_DEFAULTS = {
 };
 
 export const getResume = (userId) =>
-  JSON.parse(localStorage.getItem(getKey(userId)) || JSON.stringify(RESUME_DEFAULTS));
+  readJson(keyFor(userId), structuredClone(RESUME_DEFAULTS));
 
-export const saveResume = (userId, resumeData) =>
-  localStorage.setItem(getKey(userId), JSON.stringify(resumeData));
+export const saveResume = (userId, resumeData) => writeJson(keyFor(userId), resumeData);
 
-export const clearResume = (userId) =>
-  localStorage.removeItem(getKey(userId));
+export const clearResume = (userId) => localStorage.removeItem(keyFor(userId));

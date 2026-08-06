@@ -5,17 +5,21 @@ export default function SignatureOverlay({ p, idx, signature, onMouseDown, onRem
   return (
     <div
       className="sig-overlay"
-      style={{ left: p.x, top: p.y, width: p.w, height: p.h }}
-      onMouseDown={(e) => onMouseDown(e, idx)}
+      style={{ left: p.x, top: p.y, width: p.w, height: p.h, touchAction: 'none' }}
+      onPointerDown={(e) => onMouseDown(e, idx)}
     >
-      <img src={signature.dataUrl} alt="signature" draggable={false} />
+      <img src={signature.dataUrl} alt="Placed signature" draggable={false} />
       <button
+        type="button"
         className="sig-overlay-remove"
+        aria-label="Remove signature"
         onClick={(e) => { e.stopPropagation(); onRemove(idx); }}
       >×</button>
       <div
         className="sig-overlay-resize"
-        onMouseDown={(e) => {
+        role="slider"
+        aria-label="Resize signature"
+        onPointerDown={(e) => {
           e.stopPropagation();
           onResize(e, idx, p.w, p.h);
         }}

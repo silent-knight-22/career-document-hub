@@ -1,55 +1,111 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '../components/layout/ProtectedRoute/ProtectedRoute';
-
-import Login           from '../pages/auth/Login';
-import Register        from '../pages/auth/Register';
-import ForgotPassword  from '../pages/auth/ForgotPassword';
-import Dashboard       from '../pages/Dashboard';
-import MySignatures    from '../pages/MySignatures';
-import CreateSignature from '../pages/CreateSignature';
-import Documents       from '../pages/Documents';
-import SignDocument    from '../pages/SignDocument';
-import Profile         from '../pages/Profile';
-import Vault           from '../pages/Vault';
-import Certificates    from '../pages/Certificates';
-import ExpiryTracker   from '../pages/Expiry';
-import ResumeBuilder   from '../pages/Resume';
-import DocumentAI      from '../pages/DocumentAI';
-
+import GuestRoute from '../components/layout/GuestRoute/GuestRoute';
+import AppShell from '../components/layout/AppShell/AppShell';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 
-const P = ({ children }) => (
-  <ProtectedRoute>
-    <ErrorBoundary>
-      {children}
-    </ErrorBoundary>
-  </ProtectedRoute>
-);
+const Login = lazy(() => import('../pages/auth/Login'));
+const Register = lazy(() => import('../pages/auth/Register'));
+const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const MySignatures = lazy(() => import('../pages/MySignatures'));
+const CreateSignature = lazy(() => import('../pages/CreateSignature'));
+const Documents = lazy(() => import('../pages/Documents'));
+const SignDocument = lazy(() => import('../pages/SignDocument'));
+const Profile = lazy(() => import('../pages/Profile'));
+const Vault = lazy(() => import('../pages/Vault'));
+const Certificates = lazy(() => import('../pages/Certificates'));
+const ExpiryTracker = lazy(() => import('../pages/Expiry'));
+const ResumeBuilder = lazy(() => import('../pages/Resume'));
+const DocumentAI = lazy(() => import('../pages/DocumentAI'));
+const NotFound = lazy(() => import('../pages/NotFound'));
+
+function RouteFallback() {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '40vh',
+      }}
+      role="status"
+      aria-label="Loading page"
+    >
+      <div
+        className="animate-spin"
+        style={{
+          width: 32,
+          height: 32,
+          border: '3px solid var(--border-color)',
+          borderTopColor: 'var(--brand-primary)',
+          borderRadius: '50%',
+        }}
+      />
+    </div>
+  );
+}
 
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Public */}
-      <Route path="/login"           element={<Login />} />
-      <Route path="/register"        element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route
+        path="/login"
+        element={
+          <GuestRoute>
+            <Suspense fallback={<RouteFallback />}><Login /></Suspense>
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <GuestRoute>
+            <Suspense fallback={<RouteFallback />}><Register /></Suspense>
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <GuestRoute>
+            <Suspense fallback={<RouteFallback />}><ForgotPassword /></Suspense>
+          </GuestRoute>
+        }
+      />
 
-      {/* Protected */}
-      <Route path="/dashboard"          element={<P><Dashboard /></P>} />
-      <Route path="/vault"              element={<P><Vault /></P>} />
-      <Route path="/certificates"       element={<P><Certificates /></P>} />
-      <Route path="/expiry"             element={<P><ExpiryTracker /></P>} />
-      <Route path="/resume"             element={<P><ResumeBuilder /></P>} />
-      <Route path="/signatures"         element={<P><MySignatures /></P>} />
-      <Route path="/signatures/create"  element={<P><CreateSignature /></P>} />
-      <Route path="/documents"          element={<P><Documents /></P>} />
-      <Route path="/documents/:id/sign" element={<P><SignDocument /></P>} />
-      <Route path="/ai"                element={<P><DocumentAI /></P>} />
-      <Route path="/profile"            element={<P><Profile /></P>} />
+      <Route
+        element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <AppShell />
+            </ErrorBoundary>
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/vault" element={<Vault />} />
+        <Route path="/certificates" element={<Certificates />} />
+        <Route path="/expiry" element={<ExpiryTracker />} />
+        <Route path="/resume" element={<ResumeBuilder />} />
+        <Route path="/signatures" element={<MySignatures />} />
+        <Route path="/signatures/create" element={<CreateSignature />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/documents/:id/sign" element={<SignDocument />} />
+        <Route path="/ai" element={<DocumentAI />} />
+        <Route path="/profile" element={<Profile />} />
+      </Route>
 
-      {/* Default */}
-      <Route path="/"  element={<Navigate to="/dashboard" replace />} />
-      <Route path="*"  element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route
+        path="*"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <NotFound />
+          </Suspense>
+        }
+      />
     </Routes>
   );
 }

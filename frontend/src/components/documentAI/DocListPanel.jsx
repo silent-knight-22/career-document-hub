@@ -2,12 +2,7 @@ import React from 'react';
 import { Brain, FileText, ChevronRight, Archive, RefreshCw, AlertCircle, CheckCheck, Key } from 'lucide-react';
 import Button from '../common/Button/Button';
 import { getCachedAnalysis } from '../../services/groqService';
-
-function formatBytes(b) {
-  if (!b) return '';
-  const k = 1024, i = Math.floor(Math.log(b) / Math.log(k));
-  return `${(b / Math.pow(k, i)).toFixed(1)} ${['B','KB','MB'][i]}`;
-}
+import { formatBytes } from '../../utils/files';
 
 function timeAgo(ts) {
   const s = Math.floor((Date.now() - ts) / 1000);

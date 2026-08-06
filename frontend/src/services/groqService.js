@@ -5,11 +5,13 @@
 // ============================================================
 
 import { pdfjs } from 'react-pdf';
+import { STORAGE_KEYS } from '../api/storage/keys';
+import { safeJsonParse } from '../utils/jsonStorage';
 
 const API_BASE    = 'https://api.groq.com/openai/v1';
-const KEY_STORAGE = 'cdh_groq_api_key';
-const ANA_PREFIX  = 'cdh_analysis_';
-const CHAT_PREFIX = 'cdh_chat_';
+const KEY_STORAGE = STORAGE_KEYS.GROQ_API_KEY;
+const ANA_PREFIX  = STORAGE_KEYS.ANALYSIS;
+const CHAT_PREFIX = STORAGE_KEYS.CHAT;
 
 const MODEL_PREFERENCE = [
   'llama-3.3-70b-versatile',
@@ -40,13 +42,9 @@ export const setSelectedModel = (model) => {
   clearSessionModel();
 };
 
-export const getAvailableModels = () => {
-  try {
-    return JSON.parse(localStorage.getItem(AVAILABLE_MODELS_KEY) || '[]');
-  } catch {
-    return [];
-  }
-};
+export const getAvailableModels = () =>
+  safeJsonParse(localStorage.getItem(AVAILABLE_MODELS_KEY), []);
+
 
 export const setAvailableModels = (models) => {
   localStorage.setItem(AVAILABLE_MODELS_KEY, JSON.stringify(models));
@@ -64,7 +62,7 @@ export const hasApiKey   = ()  => !!getApiKey();
 
 // ── Analysis cache (per document) ────────────────────────────
 export const getCachedAnalysis = (docId) =>
-  JSON.parse(localStorage.getItem(ANA_PREFIX + docId) || 'null');
+  safeJsonParse(localStorage.getItem(ANA_PREFIX + docId), null);
 export const cacheAnalysis = (docId, data) =>
   localStorage.setItem(ANA_PREFIX + docId, JSON.stringify({ ...data, _cachedAt: Date.now() }));
 export const clearAnalysis = (docId) =>
@@ -72,7 +70,7 @@ export const clearAnalysis = (docId) =>
 
 // ── Chat history (per document) ───────────────────────────────
 export const getChatHistory  = (docId) =>
-  JSON.parse(localStorage.getItem(CHAT_PREFIX + docId) || '[]');
+  safeJsonParse(localStorage.getItem(CHAT_PREFIX + docId), []);
 export const saveChatHistory = (docId, h) =>
   localStorage.setItem(CHAT_PREFIX + docId, JSON.stringify(h.slice(-30)));
 export const clearChatHistory = (docId) =>

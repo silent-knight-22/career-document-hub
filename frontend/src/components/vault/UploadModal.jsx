@@ -5,16 +5,7 @@ import toast from 'react-hot-toast';
 import Button from '../common/Button/Button';
 import Modal from '../common/Modal/Modal';
 import { VAULT_CATEGORIES } from '../../services/vaultService';
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const MAX_FILE_SIZE_MB = 5;
-
-function formatBytes(b) {
-  if (!b) return '';
-  const k = 1024;
-  const i = Math.floor(Math.log(b) / Math.log(k));
-  return `${(b / Math.pow(k, i)).toFixed(1)} ${['B','KB','MB'][i]}`;
-}
+import { formatBytes, FILE_LIMITS, readFileAsDataUrl, detectFileKind } from '../../utils/files';
 
 export default function UploadModal({ isOpen, onClose, onSave }) {
   const [file, setFile]         = useState(null);
@@ -32,42 +23,38 @@ export default function UploadModal({ isOpen, onClose, onSave }) {
   const reset = () => { setFile(null); setCategory('other'); setTags(''); setNote(''); setExpiry(''); };
   const handleClose = () => { reset(); onClose(); };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!file) { toast.error('Please select a file'); return; }
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error(`File too large (${formatBytes(file.size)}). Max size is ${MAX_FILE_SIZE_MB} MB.`, { duration: 5000 });
+    if (file.size > FILE_LIMITS.VAULT) {
+      toast.error(
+        `File too large (${formatBytes(file.size)}). Max size is ${FILE_LIMITS.VAULT / (1024 * 1024)} MB.`,
+        { duration: 5000 },
+      );
       return;
     }
     setSaving(true);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        onSave({
-          name: file.name,
-          dataUrl: e.target.result,
-          type: file.type.includes('pdf') ? 'pdf' : 'image',
-          size: file.size,
-          category,
-          tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
-          note,
-          expiryDate: expiry || null,
-        });
-      } catch (err) {
-        if (err.name === 'QuotaExceededError' || err.code === 22) {
-          toast.error('Storage full. Delete some documents to free space.');
-        } else {
-          toast.error('Upload failed. Please try again.');
-        }
-      } finally {
-        setSaving(false);
-        handleClose();
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      onSave({
+        name: file.name,
+        dataUrl,
+        type: detectFileKind(file),
+        size: file.size,
+        category,
+        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+        note,
+        expiryDate: expiry || null,
+      });
+    } catch (err) {
+      if (err.name === 'QuotaExceededError' || err.code === 22) {
+        toast.error('Storage full. Delete some documents to free space.');
+      } else {
+        toast.error(err.message || 'Upload failed. Please try again.');
       }
-    };
-    reader.onerror = () => {
-      toast.error('Failed to read file.');
+    } finally {
       setSaving(false);
-    };
-    reader.readAsDataURL(file);
+      handleClose();
+    }
   };
 
   return (

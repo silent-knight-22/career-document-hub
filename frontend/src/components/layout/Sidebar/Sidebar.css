@@ -196,3 +196,26 @@
   border-color: var(--color-error);
   color: var(--color-error);
 }
+
+.sidebar-link-badge {
+  margin-left: auto;
+  font-size: 0.58rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease, var(--theme-transition);
+    z-index: 100;
+  }
+
+  .sidebar.is-open {
+    transform: translateX(0);
+  }
+}

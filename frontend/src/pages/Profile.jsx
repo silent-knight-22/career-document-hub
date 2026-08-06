@@ -5,8 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { getUserProfile, updateUserProfile, deleteAccount } from '../services/authService';
 import { getSignatures } from '../services/signatureService';
 import { getDocumentStats } from '../services/documentService';
-import Navbar from '../components/layout/Navbar/Navbar';
-import Sidebar from '../components/layout/Sidebar/Sidebar';
+import PageLayout from '../components/layout/PageLayout/PageLayout';
 import ThemeToggle from '../components/common/ThemeToggle/ThemeToggle';
 import DangerZone from '../components/profile/DangerZone';
 import DeleteAccountModal from '../components/profile/DeleteAccountModal';
@@ -44,89 +43,83 @@ export default function Profile() {
   };
 
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
-        <Navbar title="Profile" />
-        <div className="page-container">
-          <ProfileHero
-            initials={initials}
-            editName={editName}
-            setEditName={setEditName}
-            name={name}
-            setName={setName}
-            saving={saving}
-            handleSaveName={handleSaveName}
-            user={user}
-            profile={profile}
-            sigsCount={sigs.length}
-            docTotal={docStats.total}
-            docSigned={docStats.signed}
-          />
-          <div className="profile-grid">
+    <PageLayout title="Profile">
+      <ProfileHero
+        initials={initials}
+        editName={editName}
+        setEditName={setEditName}
+        name={name}
+        setName={setName}
+        saving={saving}
+        handleSaveName={handleSaveName}
+        user={user}
+        profile={profile}
+        sigsCount={sigs.length}
+        docTotal={docStats.total}
+        docSigned={docStats.signed}
+      />
+      <div className="profile-grid">
 
-            <AccountInfo
-              name={user?.name}
-              email={user?.email}
-              userId={user?.userId}
-            />
+        <AccountInfo
+          name={user?.name}
+          email={user?.email}
+          userId={user?.userId}
+        />
 
-            {/* Theme */}
-            <div className="card animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-              <div className="card-header">
-                <h3>Appearance</h3>
-              </div>
-              <div className="card-body">
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                  Choose how Career Document Hub looks. The system setting follows your device preference.
-                </p>
-                <ThemeToggle />
-              </div>
-            </div>
-
-            {/* Storage Usage */}
-            <div className="card animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-              <div className="card-header">
-                <h3>Local Storage Usage</h3>
-              </div>
-              <div className="card-body">
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                  Your documents and signatures are currently cached in your browser.
-                </p>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                  marginBottom: '0.5rem'
-                }}>
-                  <span>Quota Used</span>
-                  <span>{storage.usedMb} MB / {storage.limitMb} MB ({storage.percent}%)</span>
-                </div>
-                <div style={{ width: '100%', height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{
-                    width: `${storage.percent}%`, height: '100%',
-                    background: storage.percent > 80 ? '#ef4444' : 'var(--brand-primary)',
-                    borderRadius: '4px', transition: 'width 0.3s ease'
-                  }} />
-                </div>
-                <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                  {storage.percent > 80 
-                    ? '⚠️ Storage quota is almost full! Please delete some documents to make space.' 
-                    : '💡 Once the Spring Boot backend is active, this local limit will disappear.'
-                  }
-                </p>
-              </div>
-            </div>
-
-            <DangerZone
-              onLogout={() => { logout(); navigate('/login'); }}
-              onDeleteClick={() => setShowDelete(true)}
-            />
-
+        {/* Theme */}
+        <div className="card animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          <div className="card-header">
+            <h3>Appearance</h3>
+          </div>
+          <div className="card-body">
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+              Choose how Career Document Hub looks. The system setting follows your device preference.
+            </p>
+            <ThemeToggle />
           </div>
         </div>
+
+        {/* Storage Usage */}
+        <div className="card animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+          <div className="card-header">
+            <h3>Local Storage Usage</h3>
+          </div>
+          <div className="card-body">
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+              Your documents and signatures are currently cached in your browser.
+            </p>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              marginBottom: '0.5rem'
+            }}>
+              <span>Quota Used</span>
+              <span>{storage.usedMb} MB / {storage.limitMb} MB ({storage.percent}%)</span>
+            </div>
+            <div style={{ width: '100%', height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{
+                width: `${storage.percent}%`, height: '100%',
+                background: storage.percent > 80 ? '#ef4444' : 'var(--brand-primary)',
+                borderRadius: '4px', transition: 'width 0.3s ease'
+              }} />
+            </div>
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '0.5rem', lineHeight: '1.4' }}>
+              {storage.percent > 80 
+                ? '⚠️ Storage quota is almost full! Please delete some documents to make space.' 
+                : '💡 Once the Spring Boot backend is active, this local limit will disappear.'
+              }
+            </p>
+          </div>
+        </div>
+
+        <DangerZone
+          onLogout={() => { logout(); navigate('/login'); }}
+          onDeleteClick={() => setShowDelete(true)}
+        />
+
       </div>
 
       <DeleteAccountModal
@@ -137,6 +130,6 @@ export default function Profile() {
         setDeleteInput={setDeleteInput}
         onDeleteConfirm={handleDeleteAccount}
       />
-    </div>
+    </PageLayout>
   );
 }

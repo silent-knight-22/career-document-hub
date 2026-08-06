@@ -3,13 +3,7 @@ import { Star, Download, Trash2, StickyNote, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../common/Button/Button';
 import { getCategoryById, getExpiryStatus } from '../../services/vaultService';
-
-function formatBytes(b) {
-  if (!b) return '';
-  const k = 1024;
-  const i = Math.floor(Math.log(b) / Math.log(k));
-  return `${(b / Math.pow(k, i)).toFixed(1)} ${['B','KB','MB'][i]}`;
-}
+import { formatBytes } from '../../utils/files';
 
 export default function VaultCard({ item, onDelete, onToggleStar, onUpdateNote }) {
   const cat    = getCategoryById(item.category);

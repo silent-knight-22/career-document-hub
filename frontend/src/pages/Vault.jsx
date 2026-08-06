@@ -6,9 +6,9 @@ import {
   getVaultItems, addVaultItem, updateVaultItem, deleteVaultItem,
   toggleStar
 } from '../services/vaultService';
-import Navbar from '../components/layout/Navbar/Navbar';
-import Sidebar from '../components/layout/Sidebar/Sidebar';
+import PageLayout from '../components/layout/PageLayout/PageLayout';
 import Button from '../components/common/Button/Button';
+import EmptyState from '../components/common/EmptyState/EmptyState';
 import UploadModal from '../components/vault/UploadModal';
 import VaultCard from '../components/vault/VaultCard';
 import VaultToolbar from '../components/vault/VaultToolbar';
@@ -67,77 +67,68 @@ export default function Vault() {
   items.forEach((i) => { catCounts[i.category] = (catCounts[i.category] || 0) + 1; });
 
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
-        <Navbar title="Document Vault" />
-        <div className="page-container">
+    <PageLayout title="Document Vault">
+      {/* Header */}
+      <div className="page-header animate-fade-in-up">
+        <div>
+          <h2>Document Vault</h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            {items.length} document{items.length !== 1 ? 's' : ''} stored securely
+          </p>
+        </div>
+        <Button icon={Upload} onClick={() => setShowUpload(true)}>Add Document</Button>
+      </div>
 
-          {/* Header */}
-          <div className="page-header animate-fade-in-up">
-            <div>
-              <h2>Document Vault</h2>
-              <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                {items.length} document{items.length !== 1 ? 's' : ''} stored securely
-              </p>
-            </div>
-            <Button icon={Upload} onClick={() => setShowUpload(true)}>Add Document</Button>
-          </div>
+      <VaultToolbar
+        items={items}
+        filterCat={filterCat}
+        setFilterCat={setFilterCat}
+        search={search}
+        setSearch={setSearch}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        catCounts={catCounts}
+      />
 
-          <VaultToolbar
-            items={items}
-            filterCat={filterCat}
-            setFilterCat={setFilterCat}
-            search={search}
-            setSearch={setSearch}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            catCounts={catCounts}
+      {/* Grid */}
+      {items.length === 0 ? (
+        <div className="card animate-fade-in-up" style={{ animationDelay: '120ms' }}>
+          <EmptyState
+            icon={<Archive size={32} />}
+            title="Your vault is empty"
+            description="Store your Aadhaar, marksheets, offer letters, certificates and more. Access them anytime, anywhere."
+            action={<Button icon={Upload} onClick={() => setShowUpload(true)}>Add Your First Document</Button>}
           />
-
-          {/* Grid */}
-          {items.length === 0 ? (
-            <div className="card animate-fade-in-up" style={{ animationDelay: '120ms' }}>
-              <div className="empty-state">
-                <div className="empty-state-icon animate-float">
-                  <Archive size={32} />
-                </div>
-                <h3>Your vault is empty</h3>
-                <p>Store your Aadhaar, marksheets, offer letters, certificates and more. Access them anytime, anywhere.</p>
-                <Button icon={Upload} onClick={() => setShowUpload(true)}>Add Your First Document</Button>
-              </div>
+        </div>
+      ) : (
+        <>
+          {filtered.length === 0 ? (
+            <div className="vault-no-results">
+              <Search size={24} />
+              <p>No documents match &ldquo;{search}&rdquo;</p>
+              <button onClick={() => { setSearch(''); setFilterCat('all'); }}>Clear filters</button>
             </div>
           ) : (
-            <>
-              {filtered.length === 0 ? (
-                <div className="vault-no-results">
-                  <Search size={24} />
-                  <p>No documents match &ldquo;{search}&rdquo;</p>
-                  <button onClick={() => { setSearch(''); setFilterCat('all'); }}>Clear filters</button>
-                </div>
-              ) : (
-                <div className="vault-grid stagger-children">
-                  {filtered.map((item) => (
-                    <VaultCard
-                      key={item.id}
-                      item={item}
-                      onDelete={handleDelete}
-                      onToggleStar={handleToggleStar}
-                      onUpdateNote={handleUpdateNote}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
+            <div className="vault-grid stagger-children">
+              {filtered.map((item) => (
+                <VaultCard
+                  key={item.id}
+                  item={item}
+                  onDelete={handleDelete}
+                  onToggleStar={handleToggleStar}
+                  onUpdateNote={handleUpdateNote}
+                />
+              ))}
+            </div>
           )}
-        </div>
-      </div>
+        </>
+      )}
 
       <UploadModal
         isOpen={showUpload}
         onClose={() => setShowUpload(false)}
         onSave={handleSave}
       />
-    </div>
+    </PageLayout>
   );
 }

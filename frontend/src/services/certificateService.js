@@ -1,17 +1,19 @@
-// ============================================
-// CERTIFICATE SERVICE — localStorage layer
-// ============================================
+/**
+ * Certificates service — facade over createUserStore.
+ */
 
-const getKey = (userId) => `cdh_certs_${userId}`;
+import { createUserStore } from '../api/storage/createUserStore';
+import { STORAGE_KEYS } from '../api/storage/keys';
+import { CERT_NO_EXPIRY, getExpiryStatus } from '../utils/expiry';
 
-export const getCertificates = (userId) =>
-  JSON.parse(localStorage.getItem(getKey(userId)) || '[]');
+const store = createUserStore(STORAGE_KEYS.CERTIFICATES);
 
-const save = (userId, certs) =>
-  localStorage.setItem(getKey(userId), JSON.stringify(certs));
+export const getCertificates = (userId) => store.getAll(userId);
 
-export const addCertificate = (userId, { name, issuer, issuedDate, expiryDate, credentialId, credentialUrl, dataUrl, size }) => {
-  const certs = getCertificates(userId);
+export const addCertificate = (
+  userId,
+  { name, issuer, issuedDate, expiryDate, credentialId, credentialUrl, dataUrl, size },
+) => {
   const newCert = {
     id: crypto.randomUUID(),
     name,
@@ -24,48 +26,33 @@ export const addCertificate = (userId, { name, issuer, issuedDate, expiryDate, c
     size: size || 0,
     createdAt: new Date().toISOString(),
   };
-  certs.unshift(newCert);
-  save(userId, certs);
-  return newCert;
+  return store.insert(userId, newCert, { prepend: true });
 };
 
 export const updateCertificate = (userId, certId, updates) => {
-  const certs = getCertificates(userId).map((c) =>
-    c.id === certId ? { ...c, ...updates } : c
-  );
-  save(userId, certs);
+  store.update(userId, certId, updates);
 };
 
 export const deleteCertificate = (userId, certId) => {
-  const certs = getCertificates(userId).filter((c) => c.id !== certId);
-  save(userId, certs);
+  store.remove(userId, certId);
 };
 
-// Get expiry status (reuses same logic as vault)
-export const getCertExpiryStatus = (expiryDate) => {
-  if (!expiryDate) return { label: 'No Expiry', color: '#10b981', bg: '#d1fae5', days: null };
-  const now = new Date();
-  const exp = new Date(expiryDate);
-  const days = Math.ceil((exp - now) / 86400000);
-  if (days < 0)   return { label: 'Expired',      color: '#ef4444', bg: '#fee2e2', days };
-  if (days <= 30) return { label: `${days}d left`, color: '#f59e0b', bg: '#fef3c7', days };
-  if (days <= 90) return { label: `${days}d left`, color: '#3b82f6', bg: '#dbeafe', days };
-  return { label: 'Valid',         color: '#10b981', bg: '#d1fae5', days };
-};
+/** Preserves prior certificate empty-expiry labeling. */
+export const getCertExpiryStatus = (expiryDate) =>
+  getExpiryStatus(expiryDate, { whenEmpty: CERT_NO_EXPIRY });
 
-// Known issuers for color coding
 export const ISSUER_COLORS = {
-  'Google':      '#4285f4',
-  'AWS':         '#ff9900',
-  'Microsoft':   '#00a4ef',
-  'Meta':        '#1877f2',
-  'Coursera':    '#0056d2',
-  'Udemy':       '#a435f0',
-  'NPTEL':       '#ee3124',
-  'LinkedIn':    '#0a66c2',
-  'GitHub':      '#24292e',
-  'IBM':         '#052fad',
-  'Oracle':      '#f80000',
+  Google: '#4285f4',
+  AWS: '#ff9900',
+  Microsoft: '#00a4ef',
+  Meta: '#1877f2',
+  Coursera: '#0056d2',
+  Udemy: '#a435f0',
+  NPTEL: '#ee3124',
+  LinkedIn: '#0a66c2',
+  GitHub: '#24292e',
+  IBM: '#052fad',
+  Oracle: '#f80000',
 };
 
 export const getIssuerColor = (issuer) => {

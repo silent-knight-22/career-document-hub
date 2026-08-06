@@ -5,9 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import {
   getCertificates, addCertificate, deleteCertificate
 } from '../services/certificateService';
-import Navbar from '../components/layout/Navbar/Navbar';
-import Sidebar from '../components/layout/Sidebar/Sidebar';
+import PageLayout from '../components/layout/PageLayout/PageLayout';
 import Button from '../components/common/Button/Button';
+import EmptyState from '../components/common/EmptyState/EmptyState';
 import AddCertModal from '../components/certificates/AddCertModal';
 import CertCard from '../components/certificates/CertCard';
 import './Certificates.css';
@@ -38,54 +38,47 @@ export default function Certificates() {
   );
 
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
-        <Navbar title="Certificates" />
-        <div className="page-container">
-
-          <div className="page-header animate-fade-in-up">
-            <div>
-              <h2>My Certificates</h2>
-              <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                {certs.length} certificate{certs.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-            <Button icon={Plus} onClick={() => setShowAdd(true)}>Add Certificate</Button>
-          </div>
-
-          {certs.length > 0 && (
-            <div className="vault-search animate-fade-in-up" style={{ animationDelay: '40ms', marginBottom: '1.25rem' }}>
-              <Search size={15} />
-              <input
-                className="vault-search-input"
-                placeholder="Search by name or issuer..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          )}
-
-          {certs.length === 0 ? (
-            <div className="card animate-fade-in-up">
-              <div className="empty-state">
-                <div className="empty-state-icon animate-float"><Award size={32} /></div>
-                <h3>No certificates yet</h3>
-                <p>Add your AWS, Google, NPTEL, Coursera, or any other certificates to keep them organized.</p>
-                <Button icon={Plus} onClick={() => setShowAdd(true)}>Add Your First Certificate</Button>
-              </div>
-            </div>
-          ) : (
-            <div className="cert-grid stagger-children">
-              {filtered.map((cert) => (
-                <CertCard key={cert.id} cert={cert} onDelete={handleDelete} />
-              ))}
-            </div>
-          )}
+    <PageLayout title="Certificates">
+      <div className="page-header animate-fade-in-up">
+        <div>
+          <h2>My Certificates</h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            {certs.length} certificate{certs.length !== 1 ? 's' : ''}
+          </p>
         </div>
+        <Button icon={Plus} onClick={() => setShowAdd(true)}>Add Certificate</Button>
       </div>
 
+      {certs.length > 0 && (
+        <div className="vault-search animate-fade-in-up" style={{ animationDelay: '40ms', marginBottom: '1.25rem' }}>
+          <Search size={15} />
+          <input
+            className="vault-search-input"
+            placeholder="Search by name or issuer..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      )}
+
+      {certs.length === 0 ? (
+        <div className="card animate-fade-in-up">
+          <EmptyState
+            icon={<Award size={32} />}
+            title="No certificates yet"
+            description="Add your AWS, Google, NPTEL, Coursera, or any other certificates to keep them organized."
+            action={<Button icon={Plus} onClick={() => setShowAdd(true)}>Add Your First Certificate</Button>}
+          />
+        </div>
+      ) : (
+        <div className="cert-grid stagger-children">
+          {filtered.map((cert) => (
+            <CertCard key={cert.id} cert={cert} onDelete={handleDelete} />
+          ))}
+        </div>
+      )}
+
       <AddCertModal isOpen={showAdd} onClose={() => setShowAdd(false)} onSave={handleSave} />
-    </div>
+    </PageLayout>
   );
 }
