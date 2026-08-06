@@ -4,9 +4,9 @@
 // text extraction, and Llama-3.2 vision support for images.
 // ============================================================
 
-import { pdfjs } from 'react-pdf';
 import { STORAGE_KEYS } from '../api/storage/keys';
 import { safeJsonParse } from '../utils/jsonStorage';
+import { extractPdfTextFromDataUrl } from '../utils/pdfWorker';
 
 const API_BASE    = 'https://api.groq.com/openai/v1';
 const KEY_STORAGE = STORAGE_KEYS.GROQ_API_KEY;
@@ -76,33 +76,9 @@ export const saveChatHistory = (docId, h) =>
 export const clearChatHistory = (docId) =>
   localStorage.removeItem(CHAT_PREFIX + docId);
 
-// ── Client-side PDF text extractor ───────────────────────────
+// ── Client-side PDF text extractor (see utils/pdfWorker.js) ───
 async function extractTextFromPdf(dataUrl) {
-  try {
-    const base64 = dataUrl.split(',')[1];
-    const binaryString = window.atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-
-    const loadingTask = pdfjs.getDocument({ data: bytes });
-    const pdf = await loadingTask.promise;
-    let fullText = '';
-    
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map((item) => item.str).join(' ');
-      fullText += `\n--- Page ${i} ---\n${pageText}\n`;
-    }
-    
-    return fullText;
-  } catch (err) {
-    console.error('[Groq] PDF text extraction failed:', err);
-    throw new Error('Failed to extract text from PDF file. Make sure it is not password-protected.', { cause: err });
-  }
+  return extractPdfTextFromDataUrl(dataUrl);
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -488,8 +464,12 @@ Return ONLY valid JSON — no markdown code fences, no commentary, just the JSON
 // ════════════════════════════════════════════════════════════════
 // analyzeDocument — sends extracted text or image payload to Groq
 // ════════════════════════════════════════════════════════════════
-export async function analyzeDocument(dataUrl, onProgress) {
-  const isPdf = dataUrl.startsWith('data:application/pdf');
+export async function analyzeDocument(dataUrl, onProgress, options = {}) {
+  const isPdf =
+    options.type === 'pdf' ||
+    (typeof dataUrl === 'string' &&
+      (dataUrl.startsWith('data:application/pdf') ||
+        dataUrl.startsWith('data:application/x-pdf')));
   
   let docText = '';
   if (isPdf) {

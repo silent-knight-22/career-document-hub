@@ -51,7 +51,8 @@ export default function useDocumentAIState() {
     try {
       const result = await analyzeDocument(
         selectedDoc.dataUrl,
-        (p) => setProgress(p)
+        (p) => setProgress(p),
+        { type: selectedDoc.type },
       );
       cacheAnalysis(selectedDoc.id, result);
       setAnalysis(result);

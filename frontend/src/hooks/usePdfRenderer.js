@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { pdfjs } from 'react-pdf';
-
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).href;
+import { pdfjs } from '../utils/pdfWorker';
 
 export default function usePdfRenderer(doc) {
   const [docImage, setDocImage] = useState(null);

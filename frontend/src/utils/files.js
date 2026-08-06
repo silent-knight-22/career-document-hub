@@ -50,5 +50,8 @@ export function readFileAsDataUrl(file, { onProgress } = {}) {
  * @returns {'pdf' | 'image'}
  */
 export function detectFileKind(file) {
-  return file.type.includes('pdf') ? 'pdf' : 'image';
+  const mime = (file.type || '').toLowerCase();
+  const name = (file.name || '').toLowerCase();
+  if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf';
+  return 'image';
 }
