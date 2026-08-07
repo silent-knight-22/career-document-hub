@@ -2,6 +2,8 @@ import React from 'react';
 import { Calendar, Hash, ExternalLink, Download, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getCertExpiryStatus, getIssuerColor } from '../../services/certificateService';
+import SafeExternalLink from '../common/SafeExternalLink/SafeExternalLink';
+import { sanitizeFilename } from '../../utils/sanitize';
 
 export default function CertCard({ cert, onDelete }) {
   const issuerColor = getIssuerColor(cert.issuer);
@@ -9,9 +11,13 @@ export default function CertCard({ cert, onDelete }) {
 
   const handleDownload = () => {
     if (!cert.dataUrl) { toast.error('No file attached'); return; }
+    if (!cert.dataUrl.startsWith('data:')) {
+      toast.error('Invalid file data.');
+      return;
+    }
     const a = document.createElement('a');
     a.href     = cert.dataUrl;
-    a.download = cert.name;
+    a.download = sanitizeFilename(cert.name);
     a.click();
   };
 
@@ -48,9 +54,9 @@ export default function CertCard({ cert, onDelete }) {
 
       <div className="cert-card-footer">
         {cert.credentialUrl && (
-          <a href={cert.credentialUrl} target="_blank" rel="noreferrer" className="cert-action" title="View credential">
+          <SafeExternalLink href={cert.credentialUrl} className="cert-action" title="View credential">
             <ExternalLink size={14} />
-          </a>
+          </SafeExternalLink>
         )}
         {cert.dataUrl && (
           <button className="cert-action" onClick={handleDownload} title="Download"><Download size={14} /></button>

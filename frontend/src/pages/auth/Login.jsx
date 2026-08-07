@@ -25,9 +25,9 @@ export default function Login() {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const session = loginUser(data);
+      const session = await loginUser(data);
       login(session);
-      toast.success(`Welcome back, ${session.name.split(' ')[0]}! 👋`);
+      toast.success(`Welcome back, ${session.name.split(' ')[0]}!`);
       navigate('/dashboard');
     } catch (err) {
       toast.error(err.message);

@@ -32,9 +32,9 @@ export default function Register() {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const session = registerUser(data);
+      const session = await registerUser(data);
       login(session);
-      toast.success('Account created! Welcome to Career Document Hub 🎉');
+      toast.success('Account created! Welcome to Career Document Hub');
       navigate('/dashboard');
     } catch (err) {
       toast.error(err.message);

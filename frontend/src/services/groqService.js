@@ -7,6 +7,7 @@
 import { STORAGE_KEYS } from '../api/storage/keys';
 import { safeJsonParse } from '../utils/jsonStorage';
 import { extractPdfTextFromDataUrl } from '../utils/pdfWorker';
+import { logger } from '../utils/logger';
 
 const API_BASE    = 'https://api.groq.com/openai/v1';
 const KEY_STORAGE = STORAGE_KEYS.GROQ_API_KEY;
@@ -50,15 +51,29 @@ export const setAvailableModels = (models) => {
   localStorage.setItem(AVAILABLE_MODELS_KEY, JSON.stringify(models));
 };
 
-// Pre-fill with a default key if desired (e.g. gsk_...)
-// If set, this key will act as a fallback so users do not have to provide their own.
-const DEFAULT_API_KEY = "";
+// Never hardcode API keys in source. Keys live only in localStorage after user paste.
+const DEFAULT_API_KEY = '';
+
+/** @param {string} key */
+export function isValidGroqKeyFormat(key) {
+  return /^gsk_[A-Za-z0-9_-]{20,}$/.test(String(key || '').trim());
+}
 
 // ── API Key helpers ───────────────────────────────────────────
-export const getApiKey   = ()  => localStorage.getItem(KEY_STORAGE) || DEFAULT_API_KEY || '';
-export const setApiKey   = (k) => { localStorage.setItem(KEY_STORAGE, k.trim()); clearSessionModel(); };
-export const clearApiKey = ()  => { localStorage.removeItem(KEY_STORAGE); clearSessionModel(); };
-export const hasApiKey   = ()  => !!getApiKey();
+export const getApiKey = () => localStorage.getItem(KEY_STORAGE) || DEFAULT_API_KEY || '';
+export const setApiKey = (k) => {
+  const trimmed = String(k || '').trim();
+  if (!isValidGroqKeyFormat(trimmed)) {
+    throw new Error('Invalid Groq API key format. Expected a key starting with gsk_.');
+  }
+  localStorage.setItem(KEY_STORAGE, trimmed);
+  clearSessionModel();
+};
+export const clearApiKey = () => {
+  localStorage.removeItem(KEY_STORAGE);
+  clearSessionModel();
+};
+export const hasApiKey = () => !!getApiKey();
 
 // ── Analysis cache (per document) ────────────────────────────
 export const getCachedAnalysis = (docId) =>
@@ -86,7 +101,7 @@ async function extractTextFromPdf(dataUrl) {
 // ════════════════════════════════════════════════════════════════
 async function listModels(key) {
   const url = `${API_BASE}/models`;
-  console.info('[Groq] listModels →', url);
+  logger.info('[Groq] listModels →', url);
 
   const res = await fetch(url, {
     headers: {
@@ -108,7 +123,7 @@ async function listModels(key) {
     .map(m => m.id)
     .filter(id => id.includes('llama') || id.includes('mixtral') || id.includes('gemma'));
 
-  console.info('[Groq] generate-capable models:', filtered.join(', ') || '(none)');
+  logger.info('[Groq] generate-capable models:', filtered.join(', ') || '(none)');
   return filtered;
 }
 
@@ -118,13 +133,13 @@ async function listModels(key) {
 async function resolveModel(key) {
   const selected = getSelectedModel();
   if (selected) {
-    console.info('[Groq] Using manually selected model:', selected);
+    logger.info('[Groq] Using manually selected model:', selected);
     return selected;
   }
 
   const cached = getSessionModel();
   if (cached) {
-    console.info('[Groq] Using cached resolved model:', cached);
+    logger.info('[Groq] Using cached resolved model:', cached);
     return cached;
   }
 
@@ -141,14 +156,14 @@ async function resolveModel(key) {
       m => m === preferred || m.startsWith(preferred + '-') || m.startsWith(preferred + '.')
     );
     if (match) {
-      console.info('[Groq] Resolved model:', match);
+      logger.info('[Groq] Resolved model:', match);
       setSessionModel(match);
       return match;
     }
   }
 
   const fallback = available[0];
-  console.info('[Groq] Resolved model (fallback):', fallback);
+  logger.info('[Groq] Resolved model (fallback):', fallback);
   setSessionModel(fallback);
   return fallback;
 }
@@ -173,7 +188,7 @@ async function groqPost(messages, config = {}) {
   const model = config.model || await resolveModel(key);
   const url   = `${API_BASE}/chat/completions`;
 
-  console.info('[Groq] POST chat/completions using:', model);
+  logger.info('[Groq] POST chat/completions using:', model);
 
   const bodyPayload = {
     model,
@@ -202,7 +217,7 @@ async function groqPost(messages, config = {}) {
     const code = body?.error?.code   || res.status;
 
     if (res.status === 404 || msg.toLowerCase().includes('model not found')) {
-      console.warn('[Groq] Model not found, clearing session model cache');
+      logger.warn('[Groq] Model not found, clearing session model cache');
       clearSessionModel();
       throw new Error(`Model "${model}" is not available for this Groq API key.`);
     }
@@ -266,6 +281,9 @@ function parseJSON(raw) {
 // ════════════════════════════════════════════════════════════════
 export async function verifyApiKey(key) {
   if (!key?.trim()) return { ok: false, error: 'Please enter your API key.' };
+  if (!isValidGroqKeyFormat(key)) {
+    return { ok: false, error: 'Invalid Groq API key format. Expected a key starting with gsk_.' };
+  }
 
   try {
     const available = await listModels(key.trim());
@@ -289,11 +307,11 @@ export async function verifyApiKey(key) {
     }
     setSessionModel(bestModel);
 
-    console.info('[Groq] Key verified ✓  Best model:', bestModel);
+    logger.info('[Groq] Key verified ✓  Best model:', bestModel);
     return { ok: true, model: bestModel, allModels: available };
 
   } catch (err) {
-    console.error('[Groq] verifyApiKey error:', err.message);
+    logger.error('[Groq] verifyApiKey error:', err.message);
     if (err.message.includes('401') || err.message.toLowerCase().includes('unauthorized')) {
       return { ok: false, error: 'Invalid Groq API key. Please check your credentials.' };
     }
@@ -500,7 +518,7 @@ export async function analyzeDocument(dataUrl, onProgress, options = {}) {
       );
       resolvedModel = activeVisionModel || 'meta-llama/llama-4-scout-17b-16e-instruct';
     }
-    console.info('[Groq] Visual document analysis resolved to:', resolvedModel);
+    logger.info('[Groq] Visual document analysis resolved to:', resolvedModel);
   } else {
     resolvedModel = getSelectedModel() || await resolveModel(key);
   }

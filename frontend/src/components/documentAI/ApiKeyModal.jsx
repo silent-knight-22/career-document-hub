@@ -31,7 +31,7 @@ export default function ApiKeyModal({
         </div>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
           Get a free key at{' '}
-          <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" style={{ color: 'var(--brand-primary)' }}>
+          <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-primary)' }}>
             console.groq.com
           </a>
           . The key will be verified before saving.

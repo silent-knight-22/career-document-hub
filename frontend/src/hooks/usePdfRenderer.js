@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { configurePdfWorker, pdfjs } from '../utils/pdfWorker';
+import { logger } from '../utils/logger';
 
 /**
  * Renders the first page of a PDF (or passes through an image) as a data URL.
@@ -87,7 +88,7 @@ export default function usePdfRenderer(doc) {
         setLoadingPdf(false);
       } catch (err) {
         if (cancelled) return;
-        console.error('Error rendering PDF page:', err);
+        logger.error('Error rendering PDF page:', err?.message || err);
         setPdfError(
           'Failed to load PDF preview. Only image-based signing is supported if the PDF is corrupt or invalid.',
         );

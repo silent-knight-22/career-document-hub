@@ -1,4 +1,5 @@
 import React from 'react';
+import SafeExternalLink from '../common/SafeExternalLink/SafeExternalLink';
 
 export default function ResumePreview({ data }) {
   const { personal, education, experience, projects, skills, certifications } = data;
@@ -13,9 +14,15 @@ export default function ResumePreview({ data }) {
           {personal.email    && <span>{personal.email}</span>}
           {personal.phone    && <span>{personal.phone}</span>}
           {personal.location && <span>{personal.location}</span>}
-          {personal.linkedin && <a href={personal.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
-          {personal.github   && <a href={personal.github}   target="_blank" rel="noreferrer">GitHub</a>}
-          {personal.website  && <a href={personal.website}  target="_blank" rel="noreferrer">Portfolio</a>}
+          {personal.linkedin && (
+            <SafeExternalLink href={personal.linkedin}>LinkedIn</SafeExternalLink>
+          )}
+          {personal.github && (
+            <SafeExternalLink href={personal.github}>GitHub</SafeExternalLink>
+          )}
+          {personal.website && (
+            <SafeExternalLink href={personal.website}>Portfolio</SafeExternalLink>
+          )}
         </div>
         {personal.summary && <p className="rdoc-summary">{personal.summary}</p>}
       </div>
@@ -86,8 +93,12 @@ export default function ResumePreview({ data }) {
                   {p.tech && <span className="rdoc-item-tech"> · {p.tech}</span>}
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {p.github && <a href={p.github} target="_blank" rel="noreferrer" className="rdoc-link">GitHub</a>}
-                  {p.url    && <a href={p.url}    target="_blank" rel="noreferrer" className="rdoc-link">Live</a>}
+                  {p.github && (
+                    <SafeExternalLink href={p.github} className="rdoc-link">GitHub</SafeExternalLink>
+                  )}
+                  {p.url && (
+                    <SafeExternalLink href={p.url} className="rdoc-link">Live</SafeExternalLink>
+                  )}
                 </div>
               </div>
               {p.description && (

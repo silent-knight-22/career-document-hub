@@ -10,4 +10,27 @@ export default defineConfig({
   optimizeDeps: {
     include: ['pdfjs-dist'],
   },
+  build: {
+    // pdf worker stays large; warn only for truly unexpected chunks
+    chunkSizeWarningLimit: 1100,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('pdfjs-dist') || id.includes('react-pdf')) return 'pdfjs';
+          if (id.includes('react-router')) return 'router';
+          if (id.includes('lucide-react')) return 'icons';
+          if (
+            id.includes('react-dom') ||
+            id.includes('/react/') ||
+            id.includes('\\react\\') ||
+            id.includes('scheduler')
+          ) {
+            return 'react-vendor';
+          }
+          return undefined;
+        },
+      },
+    },
+  },
 })

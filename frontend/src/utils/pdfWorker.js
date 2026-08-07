@@ -1,19 +1,38 @@
 /**
  * Shared pdf.js worker bootstrap + text extraction.
- * Always overwrites workerSrc (react-pdf may leave a non-empty broken default).
+ * Loads react-pdf / pdfjs-dist only when first needed (sign / AI analyse).
  */
-import { pdfjs } from 'react-pdf';
-import localWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { logger } from './logger';
 
-const CDN_WORKER = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+/** @type {Promise<{ pdfjs: import('pdfjs-dist').PDFJS, localWorkerSrc: string, CDN_WORKER: string }> | null} */
+let loadPromise = null;
 
-/** @param {string} [src] */
-export function configurePdfWorker(src = localWorkerSrc) {
-  pdfjs.GlobalWorkerOptions.workerSrc = src;
+/**
+ * Dynamically load pdf.js and configure the worker.
+ * Safe to call repeatedly — result is memoized.
+ */
+export function ensurePdfJs() {
+  if (!loadPromise) {
+    loadPromise = (async () => {
+      const [{ pdfjs }, workerMod] = await Promise.all([
+        import('react-pdf'),
+        import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+      ]);
+      const localWorkerSrc = workerMod.default;
+      const CDN_WORKER = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+      pdfjs.GlobalWorkerOptions.workerSrc = localWorkerSrc;
+      return { pdfjs, localWorkerSrc, CDN_WORKER };
+    })();
+  }
+  return loadPromise;
 }
 
-// Configure on module load so any importer is ready.
-configurePdfWorker();
+/** @param {string} [src] */
+export async function configurePdfWorker(src) {
+  const { pdfjs, localWorkerSrc } = await ensurePdfJs();
+  pdfjs.GlobalWorkerOptions.workerSrc = src || localWorkerSrc;
+  return pdfjs;
+}
 
 /**
  * Decode a data-URL (or raw base64) into a fresh Uint8Array.
@@ -42,11 +61,11 @@ function dataUrlToUint8Array(dataUrl) {
 }
 
 /**
+ * @param {import('pdfjs-dist').PDFJS} pdfjs
  * @param {Uint8Array} data
  * @returns {Promise<string>}
  */
-async function extractTextFromBytes(data) {
-  // Pass a copy — pdf.js may transfer/detach the underlying ArrayBuffer
+async function extractTextFromBytes(pdfjs, data) {
   const loadingTask = pdfjs.getDocument({
     data: data.slice(0),
     useSystemFonts: true,
@@ -73,9 +92,9 @@ async function extractTextFromBytes(data) {
  * @returns {Promise<string>}
  */
 export async function extractPdfTextFromDataUrl(dataUrl) {
+  const { pdfjs, localWorkerSrc, CDN_WORKER } = await ensurePdfJs();
   const bytes = dataUrlToUint8Array(dataUrl);
 
-  // Sanity-check PDF magic header "%PDF"
   const header = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]);
   if (header !== '%PDF') {
     throw new Error(
@@ -83,17 +102,17 @@ export async function extractPdfTextFromDataUrl(dataUrl) {
     );
   }
 
-  configurePdfWorker(localWorkerSrc);
+  pdfjs.GlobalWorkerOptions.workerSrc = localWorkerSrc;
 
   try {
-    return await extractTextFromBytes(bytes);
+    return await extractTextFromBytes(pdfjs, bytes);
   } catch (localErr) {
-    console.warn('[PDF] Local worker failed, retrying with CDN worker:', localErr);
-    configurePdfWorker(CDN_WORKER);
+    logger.warn('[PDF] Local worker failed, retrying with CDN worker:', localErr);
+    pdfjs.GlobalWorkerOptions.workerSrc = CDN_WORKER;
     try {
-      return await extractTextFromBytes(bytes);
+      return await extractTextFromBytes(pdfjs, bytes);
     } catch (cdnErr) {
-      console.error('[PDF] Text extraction failed (local + CDN):', cdnErr);
+      logger.error('[PDF] Text extraction failed (local + CDN):', cdnErr);
       const detail = cdnErr?.message || localErr?.message || 'Unknown error';
       throw new Error(
         `Failed to extract text from PDF (${detail}). If the file is password-protected, remove the password and re-upload.`,
@@ -102,5 +121,3 @@ export async function extractPdfTextFromDataUrl(dataUrl) {
     }
   }
 }
-
-export { pdfjs };

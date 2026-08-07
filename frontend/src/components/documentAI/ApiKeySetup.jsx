@@ -19,17 +19,21 @@ export default function ApiKeySetup({ onSaved }) {
     setSaving(true);
     setVerifyError('');
     setFoundModel('');
-    const result = await verifyApiKey(key.trim());
-    if (!result.ok) {
+    try {
+      const result = await verifyApiKey(key.trim());
+      if (!result.ok) {
+        setVerifyError(result.error);
+        return;
+      }
+      setFoundModel(result.model);
+      setApiKey(key.trim());
+      toast.success(`Key verified ✓  Using ${result.model}`);
+      onSaved();
+    } catch (err) {
+      setVerifyError(err.message || 'Failed to save API key.');
+    } finally {
       setSaving(false);
-      setVerifyError(result.error);
-      return;
     }
-    setFoundModel(result.model);
-    setApiKey(key.trim());
-    setSaving(false);
-    toast.success(`Key verified ✓  Using ${result.model}`);
-    onSaved();
   };
 
   return (
@@ -45,7 +49,7 @@ export default function ApiKeySetup({ onSaved }) {
         <a
           href="https://console.groq.com/keys"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="ai-setup-link"
         >
           <ExternalLink size={14} /> Get your free API key at console.groq.com

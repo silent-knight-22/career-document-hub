@@ -5,10 +5,11 @@ import { saveDocument } from '../services/documentService';
 import {
   FILE_ACCEPT,
   FILE_LIMITS,
-  detectFileKind,
   formatBytes,
   readFileAsDataUrl,
+  validateUploadFile,
 } from '../utils/files';
+import { sanitizeText } from '../utils/sanitize';
 
 function trySaveDocument(userId, data) {
   try {
@@ -35,26 +36,22 @@ export default function useDocumentUpload(userId, onUploadSuccess) {
       const file = acceptedFiles[0];
       if (!file) return;
 
-      if (file.size > FILE_LIMITS.DOCUMENTS) {
-        toast.error(
-          `File too large (${formatBytes(file.size)}). Maximum size is ${FILE_LIMITS.DOCUMENTS / (1024 * 1024)} MB.\n` +
-            `Tip: Compress your PDF at smallpdf.com before uploading.`,
-          { duration: 6000 },
-        );
-        return;
-      }
-
       setUploading(true);
       setUploadProgress(0);
 
       try {
+        const { kind } = await validateUploadFile(file, {
+          maxBytes: FILE_LIMITS.DOCUMENTS,
+          allowPdf: true,
+          allowImages: true,
+        });
         const dataUrl = await readFileAsDataUrl(file, {
           onProgress: setUploadProgress,
         });
         trySaveDocument(userId, {
-          name: file.name,
+          name: sanitizeText(file.name, { maxLength: 120 }) || 'document',
           dataUrl,
-          type: detectFileKind(file),
+          type: kind,
           size: file.size,
         });
         toast.success(`"${file.name}" uploaded successfully!`);

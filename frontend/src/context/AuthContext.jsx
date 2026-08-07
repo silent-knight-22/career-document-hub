@@ -1,6 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from 'react';
-import { getCurrentSession, logoutUser } from '../services/authService';
+import { createContext, useContext, useMemo, useState, useCallback } from 'react';
+import {
+  getCurrentSession,
+  logoutUser,
+  validateSession,
+} from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -8,22 +12,32 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getCurrentSession());
   const [loading] = useState(false);
 
-  const login = (session) => setUser(session);
+  const login = useCallback((session) => {
+    setUser(validateSession(session) || session);
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     logoutUser();
     setUser(null);
-  };
+  }, []);
 
-  const updateSession = (updates) => {
-    setUser((prev) => ({ ...prev, ...updates }));
-  };
+  const updateSession = useCallback((updates) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...updates };
+      // Never allow credentials into session state
+      delete next.password;
+      delete next.passwordHash;
+      return next;
+    });
+  }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, updateSession, loading }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ user, login, logout, updateSession, loading }),
+    [user, login, logout, updateSession, loading],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => {

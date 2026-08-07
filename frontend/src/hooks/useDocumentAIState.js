@@ -78,20 +78,24 @@ export default function useDocumentAIState() {
     if (!newKey.trim()) return;
     setModalSaving(true);
     setModalKeyError('');
-    const result = await verifyApiKey(newKey.trim());
-    if (!result.ok) {
+    try {
+      const result = await verifyApiKey(newKey.trim());
+      if (!result.ok) {
+        setModalKeyError(result.error);
+        return;
+      }
+      setApiKey(newKey.trim());
+      setApiReady(true);
+      setKeyModal(false);
+      setNewKey('');
+      setModalKeyError('');
+      setSelectedModelLocal(getSelectedModel());
+      toast.success('API key verified and updated!');
+    } catch (err) {
+      setModalKeyError(err.message || 'Failed to save API key.');
+    } finally {
       setModalSaving(false);
-      setModalKeyError(result.error);
-      return;
     }
-    setApiKey(newKey.trim());
-    setApiReady(true);
-    setModalSaving(false);
-    setKeyModal(false);
-    setNewKey('');
-    setModalKeyError('');
-    setSelectedModelLocal(getSelectedModel());
-    toast.success('API key verified and updated!');
   };
 
   return {
