@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   PenLine, FileText, Signature, TrendingUp, CheckCircle, Sparkles
@@ -5,6 +6,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { getSignatures } from '../services/signatureService';
 import { getDocuments, getDocumentStats } from '../services/documentService';
+import { useLocalSnapshot } from '../hooks/useLocalSnapshot';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import Button from '../components/common/Button/Button';
 import StatCard from '../components/dashboard/StatCard';
@@ -12,17 +14,37 @@ import RecentSignatures from '../components/dashboard/RecentSignatures';
 import RecentDocuments from '../components/dashboard/RecentDocuments';
 import './Dashboard.css';
 
+const QUICK_ACTIONS = [
+  { to: '/signatures/create', icon: PenLine,   label: 'Draw Signature',    desc: 'Mouse or touch',     color: '#6366f1' },
+  { to: '/signatures/create', icon: Signature,  label: 'Upload Signature',  desc: 'From image file',    color: '#8b5cf6' },
+  { to: '/documents',         icon: FileText,   label: 'Sign Document',     desc: 'PDF, JPG, PNG',      color: '#3b82f6' },
+  { to: '/profile',           icon: TrendingUp, label: 'View Profile',      desc: 'Account settings',   color: '#10b981' },
+];
+
 export default function Dashboard() {
   const { user } = useAuth();
-  const signatures = getSignatures(user?.userId || '');
-  const documents  = getDocuments(user?.userId  || '');
-  const stats      = getDocumentStats(user?.userId || '');
+  const userId = user?.userId || '';
+
+  const signatures = useLocalSnapshot(() => getSignatures(userId), [userId]);
+  const documents = useLocalSnapshot(() => getDocuments(userId), [userId]);
+  const stats = useMemo(() => getDocumentStats(documents), [documents]);
+
+  const recentSigs = useMemo(
+    () =>
+      [...signatures]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 3),
+    [signatures],
+  );
+  const recentDocs = useMemo(
+    () =>
+      [...documents]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 3),
+    [documents],
+  );
 
   const firstName = user?.name?.split(' ')[0] || 'there';
-
-  const recentSigs = [...signatures].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3);
-  const recentDocs = [...documents].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3);
-
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
@@ -86,12 +108,7 @@ export default function Dashboard() {
       <section className="quick-actions animate-fade-in-up" style={{ animationDelay: '80ms' }} aria-label="Quick actions">
         <h3 className="section-title">Quick Actions</h3>
         <div className="quick-actions-grid">
-          {[
-            { to: '/signatures/create', icon: PenLine,   label: 'Draw Signature',    desc: 'Mouse or touch',     color: '#6366f1' },
-            { to: '/signatures/create', icon: Signature,  label: 'Upload Signature',  desc: 'From image file',    color: '#8b5cf6' },
-            { to: '/documents',         icon: FileText,   label: 'Sign Document',     desc: 'PDF, JPG, PNG',      color: '#3b82f6' },
-            { to: '/profile',           icon: TrendingUp, label: 'View Profile',      desc: 'Account settings',   color: '#10b981' },
-          ].map(({ to, icon: Icon, label, desc, color }) => (
+          {QUICK_ACTIONS.map(({ to, icon: Icon, label, desc, color }) => (
             <Link key={label} to={to} className="quick-action-card">
               <div className="quick-action-icon" style={{ background: color }} aria-hidden="true">
                 <Icon size={18} color="white" />

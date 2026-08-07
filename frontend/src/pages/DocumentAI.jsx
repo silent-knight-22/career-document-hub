@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Brain, Sparkles, MessageSquare, BookOpen, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getVaultItems } from '../services/vaultService';
 import { getDocuments } from '../services/documentService';
-import { getAvailableModels, clearApiKey, setSelectedModel } from '../services/groqService';
+import {
+  getAvailableModels,
+  clearApiKey,
+  setSelectedModel,
+  getAnalysedDocIdSet,
+} from '../services/groqService';
+import { useLocalSnapshot } from '../hooks/useLocalSnapshot';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import ApiKeySetup from '../components/documentAI/ApiKeySetup';
 import AnalysisSkeleton from '../components/documentAI/AnalysisSkeleton';
@@ -15,10 +21,25 @@ import DocListPanel from '../components/documentAI/DocListPanel';
 import useDocumentAIState from '../hooks/useDocumentAIState';
 import './DocumentAI.css';
 
+const AI_TABS = [
+  { id: 'summary', label: 'Summary', icon: BookOpen },
+  { id: 'insights', label: 'Insights', icon: Sparkles },
+  { id: 'chat', label: 'Chat Q&A', icon: MessageSquare },
+];
+
+const EMPTY_FEATURES = [
+  'Comprehensive section summaries',
+  'Source-cited key points',
+  'Legal restriction extraction',
+  'Risk & penalty detection',
+  'Financial info extraction',
+  'Natural language Q&A',
+];
+
 export default function DocumentAI() {
   const { user } = useAuth();
   const userId = user?.userId || '';
-  const availableModels = getAvailableModels();
+  const availableModels = useLocalSnapshot(() => getAvailableModels(), [userId]);
   const {
     apiReady,
     setApiReady,
@@ -43,11 +64,21 @@ export default function DocumentAI() {
     handleSelectDoc,
     handleAnalyse,
     handleReanalyse,
-    handleSaveKey
+    handleSaveKey,
   } = useDocumentAIState();
-  const vaultDocs = getVaultItems(userId);
-  const signDocs  = getDocuments(userId).filter(d => d.dataUrl);
-  const allDocs   = docTab === 'vault' ? vaultDocs : signDocs;
+
+  const vaultDocs = useLocalSnapshot(() => getVaultItems(userId), [userId]);
+  const signDocs = useLocalSnapshot(
+    () => getDocuments(userId).filter((d) => d.dataUrl),
+    [userId],
+  );
+  const allDocs = docTab === 'vault' ? vaultDocs : signDocs;
+
+  const analysedIds = useMemo(() => {
+    const ids = [...vaultDocs, ...signDocs].map((d) => d.id);
+    return getAnalysedDocIdSet(ids);
+  }, [vaultDocs, signDocs, analysisState]);
+
   if (!apiReady) {
     return (
       <PageLayout title="AI Insights">
@@ -56,11 +87,6 @@ export default function DocumentAI() {
     );
   }
 
-  const tabs = [
-    { id: 'summary',  label: 'Summary',  icon: BookOpen },
-    { id: 'insights', label: 'Insights', icon: Sparkles },
-    { id: 'chat',     label: 'Chat Q&A', icon: MessageSquare }
-  ];
   return (
     <PageLayout title="AI Insights" className="ai-page-layout">
       <DocListPanel
@@ -69,6 +95,7 @@ export default function DocumentAI() {
         vaultDocs={vaultDocs}
         signDocs={signDocs}
         allDocs={allDocs}
+        analysedIds={analysedIds}
         selectedDoc={selectedDoc}
         handleSelectDoc={handleSelectDoc}
         analysis={analysis}
@@ -78,7 +105,6 @@ export default function DocumentAI() {
         errorMsg={errorMsg}
         setKeyModal={setKeyModal}
       />
-      {/* ── RIGHT PANEL ── */}
       <div className="ai-right-panel">
         {!selectedDoc && (
           <div className="ai-empty-state">
@@ -86,12 +112,12 @@ export default function DocumentAI() {
             <h3>Select a document to analyse</h3>
             <p>
               Choose any document from your Vault or Sign Documents.
-              Groq 1.5 Flash will perform a deep, section-by-section analysis —
+              Groq will perform a deep, section-by-section analysis —
               extracting all dates, obligations, risks, benefits, and legal restrictions
               with source citations.
             </p>
             <div className="ai-empty-features">
-              {['Comprehensive section summaries', 'Source-cited key points', 'Legal restriction extraction', 'Risk & penalty detection', 'Financial info extraction', 'Natural language Q&A'].map((f) => (
+              {EMPTY_FEATURES.map((f) => (
                 <span key={f} className="ai-empty-feature"><CheckCircle2 size={13} /> {f}</span>
               ))}
             </div>
@@ -112,16 +138,21 @@ export default function DocumentAI() {
         {selectedDoc && analysisState === 'done' && analysis && (
           <>
             <div className="ai-tabs">
-              {tabs.map(({ id, label, icon: Icon }) => (
-                <button key={id} className={`ai-tab ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
+              {AI_TABS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`ai-tab ${activeTab === id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(id)}
+                >
                   <Icon size={14} /> {label}
                 </button>
               ))}
             </div>
             <div className="ai-tab-scroll">
-              {activeTab === 'summary'  && <SummaryTab  analysis={analysis} />}
+              {activeTab === 'summary' && <SummaryTab analysis={analysis} />}
               {activeTab === 'insights' && <InsightsTab analysis={analysis} />}
-              {activeTab === 'chat'     && <ChatTab     analysis={analysis} docId={selectedDoc.id} />}
+              {activeTab === 'chat' && <ChatTab analysis={analysis} docId={selectedDoc.id} />}
             </div>
           </>
         )}

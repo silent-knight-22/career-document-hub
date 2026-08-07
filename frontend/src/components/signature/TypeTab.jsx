@@ -1,21 +1,32 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../common/Button/Button';
 import Input from '../common/Input/Input';
 import TypePresetsGrid from './TypePresetsGrid';
 import TypeCustomizerPanel from './TypeCustomizerPanel';
+import { loadSignatureFonts } from '../../utils/loadSignatureFonts';
 
 export default function TypeTab({ onSave }) {
   const [text, setText] = useState('');
-  
-  // Customizer state
-  const [selectedFont, setSelectedFont]   = useState("'Dancing Script', cursive");
+  const [fontsReady, setFontsReady] = useState(false);
+
+  const [selectedFont, setSelectedFont] = useState("'Dancing Script', cursive");
   const [selectedColor, setSelectedColor] = useState('#000000');
-  const [fontSize, setFontSize]           = useState(52);
-  const [fontWeight, setFontWeight]       = useState('normal');
-  
+  const [fontSize, setFontSize] = useState(52);
+  const [fontWeight, setFontWeight] = useState('normal');
+
   const canvasRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadSignatureFonts().then(() => {
+      if (!cancelled) setFontsReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const generateSignature = () => {
     const canvas  = canvasRef.current;
@@ -47,6 +58,11 @@ export default function TypeTab({ onSave }) {
 
   return (
     <div className="tab-content">
+      {!fontsReady && (
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginBottom: '0.75rem' }} role="status">
+          Loading signature fonts…
+        </p>
+      )}
       <Input
         label="Type your name"
         id="type-name"

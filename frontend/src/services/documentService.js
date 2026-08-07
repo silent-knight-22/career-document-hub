@@ -38,11 +38,15 @@ export const deleteDocument = (userId, docId) => {
   store.remove(userId, docId);
 };
 
-export const getDocumentStats = (userId) => {
-  const docs = getDocuments(userId);
+export const getDocumentStats = (userIdOrDocs) => {
+  const docs = Array.isArray(userIdOrDocs) ? userIdOrDocs : getDocuments(userIdOrDocs);
+  let signed = 0;
+  for (const d of docs) {
+    if (d.signed) signed += 1;
+  }
   return {
     total: docs.length,
-    signed: docs.filter((d) => d.signed).length,
-    unsigned: docs.filter((d) => !d.signed).length,
+    signed,
+    unsigned: docs.length - signed,
   };
 };

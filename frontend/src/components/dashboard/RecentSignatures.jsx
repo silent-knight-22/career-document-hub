@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Signature, Clock, Plus, ArrowRight } from 'lucide-react';
 import Button from '../common/Button/Button';
 import EmptyState from '../common/EmptyState/EmptyState';
+import LazyImage from '../common/LazyImage/LazyImage';
 
-export default function RecentSignatures({ recentSigs }) {
+function RecentSignatures({ recentSigs }) {
   return (
     <section className="card dashboard-panel animate-fade-in-up">
       <div className="card-header">
@@ -34,7 +35,7 @@ export default function RecentSignatures({ recentSigs }) {
             {recentSigs.map((sig) => (
               <div key={sig.id} className="recent-item">
                 <div className="recent-sig-preview">
-                  <img src={sig.dataUrl} alt="" />
+                  <LazyImage src={sig.dataUrl} alt="" width={48} height={32} />
                 </div>
                 <div className="recent-item-info">
                   <p className="recent-item-name">{sig.name}</p>
@@ -51,3 +52,5 @@ export default function RecentSignatures({ recentSigs }) {
     </section>
   );
 }
+
+export default memo(RecentSignatures);

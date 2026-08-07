@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { FileText, Clock, PenLine, Download, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import Button from '../common/Button/Button';
 import { formatBytes } from '../../utils/files';
 
-export default function DocumentCard({ doc, onSign, onDownload, onDelete }) {
+function DocumentCard({ doc, onSign, onDownload, onDelete }) {
   return (
     <div className="doc-card card animate-fade-in-up">
       <div className="doc-card-icon" data-type={doc.type}>
@@ -42,13 +42,15 @@ export default function DocumentCard({ doc, onSign, onDownload, onDelete }) {
             Sign
           </Button>
         )}
-        <button className="sig-action-btn" onClick={() => onDownload(doc)} title="Download">
+        <button type="button" className="sig-action-btn" onClick={() => onDownload(doc)} title="Download">
           <Download size={15} />
         </button>
-        <button className="sig-action-btn danger" onClick={() => onDelete(doc)} title="Delete">
+        <button type="button" className="sig-action-btn danger" onClick={() => onDelete(doc)} title="Delete">
           <Trash2 size={15} />
         </button>
       </div>
     </div>
   );
 }
+
+export default memo(DocumentCard);

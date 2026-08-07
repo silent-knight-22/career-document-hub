@@ -1,82 +1,117 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
 
 /**
  * Signature placement / drag on the document canvas.
- * Uses Pointer Events so mouse and touch share one path.
+ * Pointer-move updates are rAF-throttled to cut React re-renders during drag.
  */
 export default function useSignatureCanvas(canvasRef, zoom, selectedSig) {
   const [placed, setPlaced] = useState([]);
   const [dragging, setDragging] = useState(null);
-  /** Blocks canvas add when a delete click would otherwise fall through to the canvas. */
   const suppressAddRef = useRef(false);
+  const draggingRef = useRef(null);
+  const rafRef = useRef(null);
+  const pendingPosRef = useRef(null);
 
   const clientPoint = (e) => ({
     x: e.clientX,
     y: e.clientY,
   });
 
-  const addSignature = (e) => {
-    if (suppressAddRef.current) return;
-    // Clicks on existing overlays / controls must never place a new stamp
-    if (e.target?.closest?.('.sig-overlay')) return;
+  const addSignature = useCallback(
+    (e) => {
+      if (suppressAddRef.current) return;
+      if (e.target?.closest?.('.sig-overlay')) return;
 
-    if (!selectedSig) {
-      toast.error('Select a signature first');
-      return;
-    }
-    const { x: cx, y: cy } = clientPoint(e);
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (cx - rect.left) / zoom;
-    const y = (cy - rect.top) / zoom;
-    setPlaced((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        sigId: selectedSig.id,
-        x: x - 80,
-        y: y - 30,
-        w: 160,
-        h: 60,
-      },
-    ]);
-  };
+      if (!selectedSig) {
+        toast.error('Select a signature first');
+        return;
+      }
+      const { x: cx, y: cy } = clientPoint(e);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (cx - rect.left) / zoom;
+      const y = (cy - rect.top) / zoom;
+      setPlaced((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          sigId: selectedSig.id,
+          x: x - 80,
+          y: y - 30,
+          w: 160,
+          h: 60,
+        },
+      ]);
+    },
+    [selectedSig, zoom],
+  );
 
-  const handlePointerDown = (e, id) => {
+  const handlePointerDown = useCallback((e, id) => {
     e.stopPropagation();
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const rect = e.currentTarget.getBoundingClientRect();
     const { x: cx, y: cy } = clientPoint(e);
-    setDragging({
+    const next = {
       id,
       offsetX: cx - rect.left,
       offsetY: cy - rect.top,
-    });
-  };
+    };
+    draggingRef.current = next;
+    setDragging(next);
+  }, []);
 
-  const handlePointerMove = (e) => {
-    if (dragging === null || !canvasRef.current) return;
-    const { x: cx, y: cy } = clientPoint(e);
-    const containerRect = canvasRef.current.getBoundingClientRect();
-    const x = (cx - containerRect.left) / zoom - dragging.offsetX;
-    const y = (cy - containerRect.top) / zoom - dragging.offsetY;
-    setPlaced((prev) =>
-      prev.map((p) => (p.id === dragging.id ? { ...p, x, y } : p)),
-    );
-  };
+  const handlePointerMove = useCallback(
+    (e) => {
+      const drag = draggingRef.current;
+      if (!drag || !canvasRef.current) return;
+      const { x: cx, y: cy } = clientPoint(e);
+      const containerRect = canvasRef.current.getBoundingClientRect();
+      pendingPosRef.current = {
+        id: drag.id,
+        x: (cx - containerRect.left) / zoom - drag.offsetX,
+        y: (cy - containerRect.top) / zoom - drag.offsetY,
+      };
 
-  const handlePointerUp = () => {
+      if (rafRef.current != null) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        const pending = pendingPosRef.current;
+        if (!pending) return;
+        setPlaced((prev) =>
+          prev.map((p) =>
+            p.id === pending.id ? { ...p, x: pending.x, y: pending.y } : p,
+          ),
+        );
+      });
+    },
+    [canvasRef, zoom],
+  );
+
+  const handlePointerUp = useCallback(() => {
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    const pending = pendingPosRef.current;
+    if (pending) {
+      setPlaced((prev) =>
+        prev.map((p) =>
+          p.id === pending.id ? { ...p, x: pending.x, y: pending.y } : p,
+        ),
+      );
+      pendingPosRef.current = null;
+    }
+    draggingRef.current = null;
     setDragging(null);
-  };
+  }, []);
 
-  const removeOverlay = (id) => {
-    // Deleting unmounts the button; the trailing click can hit the canvas.
+  const removeOverlay = useCallback((id) => {
     suppressAddRef.current = true;
     setPlaced((prev) => prev.filter((p) => p.id !== id));
     window.setTimeout(() => {
       suppressAddRef.current = false;
     }, 0);
-  };
+  }, []);
 
   return {
     placed,
@@ -89,5 +124,6 @@ export default function useSignatureCanvas(canvasRef, zoom, selectedSig) {
     handlePointerMove,
     handlePointerUp,
     removeOverlay,
+    dragging,
   };
 }

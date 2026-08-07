@@ -1,24 +1,24 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Brain, FileText, ChevronRight, Archive, RefreshCw, CheckCheck, Key } from 'lucide-react';
 import Button from '../common/Button/Button';
 import Alert from '../common/Alert/Alert';
-import { getCachedAnalysis } from '../../services/groqService';
 import { formatBytes } from '../../utils/files';
 
 function timeAgo(ts) {
   const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 60)   return 'just now';
-  if (s < 3600) return `${Math.floor(s/60)}m ago`;
-  if (s < 86400)return `${Math.floor(s/3600)}h ago`;
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
   return new Date(ts).toLocaleDateString();
 }
 
-export default function DocListPanel({
+function DocListPanel({
   docTab,
   setDocTab,
   vaultDocs,
   signDocs,
   allDocs,
+  analysedIds,
   selectedDoc,
   handleSelectDoc,
   analysis,
@@ -26,22 +26,22 @@ export default function DocListPanel({
   handleAnalyse,
   handleReanalyse,
   errorMsg,
-  setKeyModal
+  setKeyModal,
 }) {
   return (
     <div className="ai-left-panel">
       <div className="ai-left-header">
         <span className="ai-header-title"><Brain size={15} /> AI Document Intelligence</span>
-        <button className="ai-key-btn" onClick={() => setKeyModal(true)} title="Manage API key">
+        <button type="button" className="ai-key-btn" onClick={() => setKeyModal(true)} title="Manage API key">
           <Key size={13} />
         </button>
       </div>
 
       <div className="ai-source-tabs">
-        <button className={`ai-source-tab ${docTab === 'vault' ? 'active' : ''}`} onClick={() => setDocTab('vault')}>
+        <button type="button" className={`ai-source-tab ${docTab === 'vault' ? 'active' : ''}`} onClick={() => setDocTab('vault')}>
           <Archive size={13} /> Vault ({vaultDocs.length})
         </button>
-        <button className={`ai-source-tab ${docTab === 'sign' ? 'active' : ''}`} onClick={() => setDocTab('sign')}>
+        <button type="button" className={`ai-source-tab ${docTab === 'sign' ? 'active' : ''}`} onClick={() => setDocTab('sign')}>
           <FileText size={13} /> Documents ({signDocs.length})
         </button>
       </div>
@@ -53,13 +53,18 @@ export default function DocListPanel({
           </p>
         ) : (
           allDocs.map((doc) => (
-            <button key={doc.id} className={`ai-doc-item ${selectedDoc?.id === doc.id ? 'selected' : ''}`} onClick={() => handleSelectDoc(doc)}>
-              <div className="ai-doc-item-icon">{doc.type === 'pdf' ? '📄' : '🖼️'}</div>
+            <button
+              key={doc.id}
+              type="button"
+              className={`ai-doc-item ${selectedDoc?.id === doc.id ? 'selected' : ''}`}
+              onClick={() => handleSelectDoc(doc)}
+            >
+              <div className="ai-doc-item-icon" aria-hidden="true">{doc.type === 'pdf' ? '📄' : '🖼️'}</div>
               <div className="ai-doc-item-info">
                 <p className="ai-doc-item-name">{doc.name}</p>
                 <p className="ai-doc-item-meta">
                   {formatBytes(doc.size)}
-                  {getCachedAnalysis(doc.id) && <span className="ai-analysed-badge">✓ Analysed</span>}
+                  {analysedIds?.has(doc.id) && <span className="ai-analysed-badge">✓ Analysed</span>}
                 </p>
               </div>
               <ChevronRight size={13} className="ai-doc-item-arrow" />
@@ -122,3 +127,5 @@ export default function DocListPanel({
     </div>
   );
 }
+
+export default memo(DocListPanel);

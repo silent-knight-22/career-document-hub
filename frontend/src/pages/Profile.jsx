@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getUserProfile, updateUserProfile, deleteAccount } from '../services/authService';
 import { getSignatures } from '../services/signatureService';
-import { getDocumentStats } from '../services/documentService';
+import { getDocuments, getDocumentStats } from '../services/documentService';
+import { useLocalSnapshot } from '../hooks/useLocalSnapshot';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import ThemeToggle from '../components/common/ThemeToggle/ThemeToggle';
 import DangerZone from '../components/profile/DangerZone';
@@ -16,31 +17,46 @@ import './Profile.css';
 
 export default function Profile() {
   const { user, logout, updateSession } = useAuth();
-  const navigate  = useNavigate();
-  const profile   = getUserProfile(user?.userId || '');
-  const sigs      = getSignatures(user?.userId || '');
-  const docStats  = getDocumentStats(user?.userId || '');
-  const storage   = getLocalStorageUsage();
-  const [editName,    setEditName]    = useState(false);
-  const [name,        setName]        = useState(user?.name || '');
-  const [saving,      setSaving]      = useState(false);
-  const [showDelete,  setShowDelete]  = useState(false);
-  const [deleteInput, setDeleteInput] = useState('');
-  const initials = user?.name ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) : '?';
+  const navigate = useNavigate();
+  const userId = user?.userId || '';
 
-  const handleSaveName = () => {
+  const profile = useLocalSnapshot(() => getUserProfile(userId), [userId]);
+  const sigs = useLocalSnapshot(() => getSignatures(userId), [userId]);
+  const docs = useLocalSnapshot(() => getDocuments(userId), [userId]);
+  const docStats = useMemo(() => getDocumentStats(docs), [docs]);
+  const storage = useLocalSnapshot(() => getLocalStorageUsage(), [userId]);
+
+  const [editName, setEditName] = useState(false);
+  const [name, setName] = useState(user?.name || '');
+  const [saving, setSaving] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleteInput, setDeleteInput] = useState('');
+
+  const initials = useMemo(
+    () =>
+      user?.name
+        ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+        : '?',
+    [user?.name],
+  );
+
+  const handleSaveName = useCallback(() => {
     if (!name.trim()) return toast.error('Name cannot be empty');
     setSaving(true);
     updateUserProfile(user.userId, { name: name.trim() });
     updateSession({ name: name.trim() });
     toast.success('Name updated!');
-    setSaving(false); setEditName(false);
-  };
-  const handleDeleteAccount = () => {
+    setSaving(false);
+    setEditName(false);
+  }, [name, user?.userId, updateSession]);
+
+  const handleDeleteAccount = useCallback(() => {
     if (deleteInput !== user.email) return toast.error('Email does not match');
-    deleteAccount(user.userId); logout();
-    toast.success('Account deleted'); navigate('/login');
-  };
+    deleteAccount(user.userId);
+    logout();
+    toast.success('Account deleted');
+    navigate('/login');
+  }, [deleteInput, user, logout, navigate]);
 
   return (
     <PageLayout title="Profile">
@@ -59,14 +75,12 @@ export default function Profile() {
         docSigned={docStats.signed}
       />
       <div className="profile-grid">
-
         <AccountInfo
           name={user?.name}
           email={user?.email}
           userId={user?.userId}
         />
 
-        {/* Theme */}
         <div className="card animate-fade-in-up" style={{ animationDelay: '100ms' }}>
           <div className="card-header">
             <h3>Appearance</h3>
@@ -79,7 +93,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Storage Usage */}
         <div className="card animate-fade-in-up" style={{ animationDelay: '150ms' }}>
           <div className="card-header">
             <h3>Local Storage Usage</h3>
@@ -107,8 +120,8 @@ export default function Profile() {
               }} />
             </div>
             <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '0.5rem', lineHeight: '1.4' }}>
-              {storage.percent > 80 
-                ? '⚠️ Storage quota is almost full! Please delete some documents to make space.' 
+              {storage.percent > 80
+                ? '⚠️ Storage quota is almost full! Please delete some documents to make space.'
                 : '💡 Once the Spring Boot backend is active, this local limit will disappear.'
               }
             </p>
@@ -119,7 +132,6 @@ export default function Profile() {
           onLogout={() => { logout(); navigate('/login'); }}
           onDeleteClick={() => setShowDelete(true)}
         />
-
       </div>
 
       <DeleteAccountModal

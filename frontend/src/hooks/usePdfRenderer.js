@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { configurePdfWorker, pdfjs } from '../utils/pdfWorker';
 import { logger } from '../utils/logger';
 
 /**
  * Renders the first page of a PDF (or passes through an image) as a data URL.
- * Depends on stable primitive fields — NOT the whole `doc` object — because
- * getDocumentById() re-parses localStorage every render and would otherwise
- * create an infinite loading flicker.
+ * pdf.js is loaded on demand so browsing other routes stays light.
  */
 export default function usePdfRenderer(doc) {
   const [docImage, setDocImage] = useState(null);
@@ -48,7 +45,8 @@ export default function usePdfRenderer(doc) {
 
     const renderPdfPage = async () => {
       try {
-        configurePdfWorker();
+        const { ensurePdfJs } = await import('../utils/pdfWorker');
+        const { pdfjs } = await ensurePdfJs();
 
         const parts = dataUrl.split(',');
         if (parts.length < 2) {

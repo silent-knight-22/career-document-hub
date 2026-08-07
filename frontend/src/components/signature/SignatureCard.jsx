@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Star, Download, Trash2, Clock } from 'lucide-react';
+import LazyImage from '../common/LazyImage/LazyImage';
 
 const TYPE_LABELS = { draw: 'Drawn', upload: 'Uploaded', type: 'Typed' };
 const TYPE_COLORS = { draw: '#6366f1', upload: '#3b82f6', type: '#10b981' };
 
-export default function SignatureCard({ sig, onSetDefault, onDownload, onDelete }) {
+function SignatureCard({ sig, onSetDefault, onDownload, onDelete }) {
   return (
     <div className="sig-card card hover-lift animate-fade-in-up">
       {sig.isDefault && (
@@ -14,7 +15,7 @@ export default function SignatureCard({ sig, onSetDefault, onDownload, onDelete 
       )}
 
       <div className="sig-preview-area">
-        <img src={sig.dataUrl} alt={sig.name} />
+        <LazyImage src={sig.dataUrl} alt={sig.name} width={200} height={80} />
       </div>
 
       <div className="sig-card-body">
@@ -40,6 +41,7 @@ export default function SignatureCard({ sig, onSetDefault, onDownload, onDelete 
         <div className="sig-card-actions">
           {!sig.isDefault && (
             <button
+              type="button"
               className="sig-action-btn"
               onClick={() => onSetDefault(sig)}
               title="Set as default"
@@ -48,6 +50,7 @@ export default function SignatureCard({ sig, onSetDefault, onDownload, onDelete 
             </button>
           )}
           <button
+            type="button"
             className="sig-action-btn"
             onClick={() => onDownload(sig)}
             title="Download"
@@ -55,6 +58,7 @@ export default function SignatureCard({ sig, onSetDefault, onDownload, onDelete 
             <Download size={15} />
           </button>
           <button
+            type="button"
             className="sig-action-btn danger"
             onClick={() => onDelete(sig)}
             title="Delete"
@@ -66,3 +70,5 @@ export default function SignatureCard({ sig, onSetDefault, onDownload, onDelete 
     </div>
   );
 }
+
+export default memo(SignatureCard);

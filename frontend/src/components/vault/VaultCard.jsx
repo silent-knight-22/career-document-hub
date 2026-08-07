@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Star, Download, Trash2, StickyNote, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../common/Button/Button';
 import { getCategoryById, getExpiryStatus } from '../../services/vaultService';
 import { formatBytes } from '../../utils/files';
 
-export default function VaultCard({ item, onDelete, onToggleStar, onUpdateNote }) {
-  const cat    = getCategoryById(item.category);
+function VaultCard({ item, onDelete, onToggleStar, onUpdateNote }) {
+  const cat = getCategoryById(item.category);
   const expiry = getExpiryStatus(item.expiryDate);
   const [editNote, setEditNote] = useState(false);
-  const [note, setNote]         = useState(item.note || '');
+  const [note, setNote] = useState(item.note || '');
 
   const handleDownload = () => {
     const a = document.createElement('a');
-    a.href     = item.dataUrl;
+    a.href = item.dataUrl;
     a.download = item.name;
     a.click();
     toast.success('Downloading...');
@@ -35,6 +35,7 @@ export default function VaultCard({ item, onDelete, onToggleStar, onUpdateNote }
             {cat.emoji} {cat.label}
           </span>
           <button
+            type="button"
             className={`vault-star-btn ${item.starred ? 'starred' : ''}`}
             onClick={() => onToggleStar(item.id)}
           >
@@ -48,7 +49,9 @@ export default function VaultCard({ item, onDelete, onToggleStar, onUpdateNote }
         {item.tags?.length > 0 && (
           <div className="vault-tags">
             {item.tags.map((t) => (
-              <span key={t} className="vault-tag">#{t}</span>
+              <span key={t} className="vault-tag">
+                #{t}
+              </span>
             ))}
           </div>
         )}
@@ -69,8 +72,12 @@ export default function VaultCard({ item, onDelete, onToggleStar, onUpdateNote }
               autoFocus
             />
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Button size="sm" onClick={saveNote}>Save</Button>
-              <Button size="sm" variant="ghost" onClick={() => setEditNote(false)}>Cancel</Button>
+              <Button size="sm" onClick={saveNote}>
+                Save
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditNote(false)}>
+                Cancel
+              </Button>
             </div>
           </div>
         ) : item.note ? (
@@ -81,16 +88,23 @@ export default function VaultCard({ item, onDelete, onToggleStar, onUpdateNote }
       </div>
 
       <div className="vault-card-footer">
-        <button className="vault-action" onClick={() => setEditNote(true)} title="Add note">
+        <button type="button" className="vault-action" onClick={() => setEditNote(true)} title="Add note">
           <StickyNote size={14} />
         </button>
-        <button className="vault-action" onClick={handleDownload} title="Download">
+        <button type="button" className="vault-action" onClick={handleDownload} title="Download">
           <Download size={14} />
         </button>
-        <button className="vault-action danger" onClick={() => onDelete(item.id)} title="Delete">
+        <button
+          type="button"
+          className="vault-action danger"
+          onClick={() => onDelete(item.id)}
+          title="Delete"
+        >
           <Trash2 size={14} />
         </button>
       </div>
     </div>
   );
 }
+
+export default memo(VaultCard);

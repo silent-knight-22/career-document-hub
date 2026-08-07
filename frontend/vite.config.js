@@ -11,8 +11,18 @@ export default defineConfig({
     include: ['pdfjs-dist'],
   },
   build: {
-    // pdf worker stays large; warn only for truly unexpected chunks
     chunkSizeWarningLimit: 1100,
+    // Keep heavy PDF code out of the critical preload path
+    modulePreload: {
+      resolveDependencies(filename, deps) {
+        return deps.filter(
+          (dep) =>
+            !dep.includes('pdfjs') &&
+            !dep.includes('pdf.worker') &&
+            !dep.includes('pdfWorker'),
+        );
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {

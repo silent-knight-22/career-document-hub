@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Signature, ZoomOut, ZoomIn, RotateCcw, CheckCircle, Download } from 'lucide-react';
 import Button from '../common/Button/Button';
+import LazyImage from '../common/LazyImage/LazyImage';
 
-export default function SignaturePanel({
+function SignaturePanel({
   signatures,
   selectedSig,
   onSelectSig,
@@ -11,12 +12,14 @@ export default function SignaturePanel({
   setZoom,
   placedCount,
   onExport,
-  saving
+  saving,
 }) {
   return (
     <aside className="sign-panel">
       <div className="sign-panel-header">
-        <h3><Signature size={16} /> Signatures</h3>
+        <h3>
+          <Signature size={16} /> Signatures
+        </h3>
       </div>
       <div className="sign-panel-body">
         {signatures.length === 0 ? (
@@ -30,15 +33,18 @@ export default function SignaturePanel({
           </div>
         ) : (
           <>
-            <p className="sign-panel-hint">Select a signature, then click on the document to place it</p>
+            <p className="sign-panel-hint">
+              Select a signature, then click on the document to place it
+            </p>
             {signatures.map((sig) => (
               <button
                 key={sig.id}
+                type="button"
                 className={`sig-selector ${selectedSig?.id === sig.id ? 'active' : ''}`}
                 onClick={() => onSelectSig(sig)}
               >
                 <div className="sig-selector-preview">
-                  <img src={sig.dataUrl} alt={sig.name} />
+                  <LazyImage src={sig.dataUrl} alt={sig.name} width={120} height={40} />
                 </div>
                 <p className="sig-selector-name">{sig.name}</p>
               </button>
@@ -49,10 +55,26 @@ export default function SignaturePanel({
 
       <div className="sign-panel-footer">
         <div className="sign-zoom-controls">
-          <button className="zoom-btn" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} title="Zoom out"><ZoomOut size={14} /></button>
+          <button
+            type="button"
+            className="zoom-btn"
+            onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))}
+            title="Zoom out"
+          >
+            <ZoomOut size={14} />
+          </button>
           <span className="zoom-label">{Math.round(zoom * 100)}%</span>
-          <button className="zoom-btn" onClick={() => setZoom((z) => Math.min(2, z + 0.1))} title="Zoom in"><ZoomIn size={14} /></button>
-          <button className="zoom-btn" onClick={() => setZoom(1)} title="Reset zoom"><RotateCcw size={14} /></button>
+          <button
+            type="button"
+            className="zoom-btn"
+            onClick={() => setZoom((z) => Math.min(2, z + 0.1))}
+            title="Zoom in"
+          >
+            <ZoomIn size={14} />
+          </button>
+          <button type="button" className="zoom-btn" onClick={() => setZoom(1)} title="Reset zoom">
+            <RotateCcw size={14} />
+          </button>
         </div>
 
         <div className="sign-footer-actions">
@@ -76,3 +98,5 @@ export default function SignaturePanel({
     </aside>
   );
 }
+
+export default memo(SignaturePanel);

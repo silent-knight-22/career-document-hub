@@ -6,7 +6,6 @@
 
 import { STORAGE_KEYS } from '../api/storage/keys';
 import { safeJsonParse } from '../utils/jsonStorage';
-import { extractPdfTextFromDataUrl } from '../utils/pdfWorker';
 import { logger } from '../utils/logger';
 
 const API_BASE    = 'https://api.groq.com/openai/v1';
@@ -83,6 +82,23 @@ export const cacheAnalysis = (docId, data) =>
 export const clearAnalysis = (docId) =>
   localStorage.removeItem(ANA_PREFIX + docId);
 
+/** Fast existence check — avoids JSON.parse for list badges. */
+export const hasCachedAnalysis = (docId) =>
+  Boolean(docId && localStorage.getItem(ANA_PREFIX + docId));
+
+/**
+ * Build a Set of doc IDs that already have cached analysis (one LS pass).
+ * @param {string[]} docIds
+ * @returns {Set<string>}
+ */
+export function getAnalysedDocIdSet(docIds = []) {
+  const set = new Set();
+  for (const id of docIds) {
+    if (hasCachedAnalysis(id)) set.add(id);
+  }
+  return set;
+}
+
 // ── Chat history (per document) ───────────────────────────────
 export const getChatHistory  = (docId) =>
   safeJsonParse(localStorage.getItem(CHAT_PREFIX + docId), []);
@@ -91,8 +107,9 @@ export const saveChatHistory = (docId, h) =>
 export const clearChatHistory = (docId) =>
   localStorage.removeItem(CHAT_PREFIX + docId);
 
-// ── Client-side PDF text extractor (see utils/pdfWorker.js) ───
+// ── Client-side PDF text extractor (lazy pdf.js) ───────────────
 async function extractTextFromPdf(dataUrl) {
+  const { extractPdfTextFromDataUrl } = await import('../utils/pdfWorker');
   return extractPdfTextFromDataUrl(dataUrl);
 }
 

@@ -1,4 +1,6 @@
-export default function SignatureOverlay({ p, signature, onMouseDown, onRemove, onResize }) {
+import { memo } from 'react';
+
+function SignatureOverlay({ p, signature, onMouseDown, onRemove, onResize }) {
   if (!signature) return null;
 
   const stop = (e) => {
@@ -13,7 +15,12 @@ export default function SignatureOverlay({ p, signature, onMouseDown, onRemove, 
       onPointerDown={(e) => onMouseDown(e, p.id)}
       onClick={stop}
     >
-      <img src={signature.dataUrl} alt="" draggable={false} />
+      <img
+        src={signature.dataUrl}
+        alt=""
+        draggable={false}
+        decoding="async"
+      />
       <button
         type="button"
         className="sig-overlay-remove"
@@ -38,3 +45,5 @@ export default function SignatureOverlay({ p, signature, onMouseDown, onRemove, 
     </div>
   );
 }
+
+export default memo(SignatureOverlay);
