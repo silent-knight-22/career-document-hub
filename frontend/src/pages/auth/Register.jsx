@@ -8,12 +8,14 @@ import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/common/Input/Input';
 import Button from '../../components/common/Button/Button';
 import ThemeToggle from '../../components/common/ThemeToggle/ThemeToggle';
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import './Auth.css';
 
 import PasswordStrength from '../../components/auth/PasswordStrength';
 import AuthHeader from '../../components/auth/AuthHeader';
 
 export default function Register() {
+  useDocumentTitle('Create account');
   const navigate = useNavigate();
   const { login } = useAuth();
   const [showPass, setShowPass]   = useState(false);
@@ -45,13 +47,13 @@ export default function Register() {
 
   return (
     <div className="auth-page">
-      <div className="auth-bg-decoration" />
+      <div className="auth-bg-decoration" aria-hidden="true" />
 
       <div className="auth-theme-toggle">
         <ThemeToggle />
       </div>
 
-      <div className="auth-card animate-scale-in">
+      <main id="main-content" className="auth-card animate-scale-in" tabIndex={-1}>
         <AuthHeader
           title="Create your account"
           subtitle="Your all-in-one career document workspace — free forever"
@@ -142,7 +144,7 @@ export default function Register() {
           Already have an account?{' '}
           <Link to="/login">Sign in</Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import ProtectedRoute from '../components/layout/ProtectedRoute/ProtectedRoute';
 import GuestRoute from '../components/layout/GuestRoute/GuestRoute';
 import AppShell from '../components/layout/AppShell/AppShell';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
+import PageLoader from '../components/common/PageLoader/PageLoader';
 
 const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
@@ -21,32 +22,6 @@ const ResumeBuilder = lazy(() => import('../pages/Resume'));
 const DocumentAI = lazy(() => import('../pages/DocumentAI'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
-function RouteFallback() {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '40vh',
-      }}
-      role="status"
-      aria-label="Loading page"
-    >
-      <div
-        className="animate-spin"
-        style={{
-          width: 32,
-          height: 32,
-          border: '3px solid var(--border-color)',
-          borderTopColor: 'var(--brand-primary)',
-          borderRadius: '50%',
-        }}
-      />
-    </div>
-  );
-}
-
 export default function AppRoutes() {
   return (
     <Routes>
@@ -54,7 +29,9 @@ export default function AppRoutes() {
         path="/login"
         element={
           <GuestRoute>
-            <Suspense fallback={<RouteFallback />}><Login /></Suspense>
+            <Suspense fallback={<PageLoader />}>
+              <Login />
+            </Suspense>
           </GuestRoute>
         }
       />
@@ -62,7 +39,9 @@ export default function AppRoutes() {
         path="/register"
         element={
           <GuestRoute>
-            <Suspense fallback={<RouteFallback />}><Register /></Suspense>
+            <Suspense fallback={<PageLoader />}>
+              <Register />
+            </Suspense>
           </GuestRoute>
         }
       />
@@ -70,7 +49,9 @@ export default function AppRoutes() {
         path="/forgot-password"
         element={
           <GuestRoute>
-            <Suspense fallback={<RouteFallback />}><ForgotPassword /></Suspense>
+            <Suspense fallback={<PageLoader />}>
+              <ForgotPassword />
+            </Suspense>
           </GuestRoute>
         }
       />
@@ -101,7 +82,7 @@ export default function AppRoutes() {
       <Route
         path="*"
         element={
-          <Suspense fallback={<RouteFallback />}>
+          <Suspense fallback={<PageLoader />}>
             <NotFound />
           </Suspense>
         }

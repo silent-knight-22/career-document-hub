@@ -40,11 +40,22 @@ export default function VaultToolbar({
           <Search size={15} />
           <input
             className="vault-search-input"
+            type="search"
             placeholder="Search by name, tag, or note..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search vault documents"
           />
-          {search && <button className="vault-clear-search" onClick={() => setSearch('')}><X size={13} /></button>}
+          {search && (
+            <button
+              type="button"
+              className="vault-clear-search"
+              onClick={() => setSearch('')}
+              aria-label="Clear search"
+            >
+              <X size={13} />
+            </button>
+          )}
         </div>
         <div className="vault-sort">
           <Filter size={14} />

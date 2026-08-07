@@ -4,6 +4,7 @@ import { Search, AlertCircle, Trash2, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getDocuments, deleteDocument } from '../services/documentService';
+import { withOptimisticUpdate } from '../utils/optimistic';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import Button from '../components/common/Button/Button';
 import EmptyState from '../components/common/EmptyState/EmptyState';
@@ -31,10 +32,19 @@ export default function Documents() {
   );
 
   const handleDelete = () => {
-    deleteDocument(user.userId, deleteTarget.id);
-    toast.success('Document deleted');
+    const target = deleteTarget;
+    if (!target) return;
     setDeleteTarget(null);
-    refresh();
+    withOptimisticUpdate({
+      getSnapshot: () => documents,
+      setSnapshot: setDocuments,
+      optimistic: (curr) => curr.filter((d) => d.id !== target.id),
+      commit: () => {
+        deleteDocument(user.userId, target.id);
+        toast.success('Document deleted');
+      },
+      onError: () => toast.error('Could not delete document.'),
+    }).catch(() => {});
   };
 
   const handleDownload = (doc) => {
@@ -81,11 +91,12 @@ export default function Documents() {
         <div className="doc-search animate-fade-in-up" style={{ animationDelay: '100ms' }}>
           <Search size={16} style={{ color: 'var(--text-tertiary)' }} />
           <input
-            type="text"
+            type="search"
             placeholder="Search documents..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="doc-search-input"
+            aria-label="Search documents"
           />
         </div>
       )}

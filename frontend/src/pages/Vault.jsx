@@ -6,6 +6,7 @@ import {
   getVaultItems, addVaultItem, updateVaultItem, deleteVaultItem,
   toggleStar
 } from '../services/vaultService';
+import { withOptimisticUpdate } from '../utils/optimistic';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import Button from '../components/common/Button/Button';
 import EmptyState from '../components/common/EmptyState/EmptyState';
@@ -31,15 +32,30 @@ export default function Vault() {
     refresh();
   };
 
-  const handleDelete = (itemId) => {
-    deleteVaultItem(user.userId, itemId);
-    toast.success('Removed from vault');
-    refresh();
+  const handleToggleStar = (itemId) => {
+    withOptimisticUpdate({
+      getSnapshot: () => items,
+      setSnapshot: setItems,
+      optimistic: (curr) =>
+        curr.map((i) => (i.id === itemId ? { ...i, starred: !i.starred } : i)),
+      commit: () => {
+        toggleStar(user.userId, itemId);
+      },
+      onError: () => toast.error('Could not update star. Please try again.'),
+    }).catch(() => {});
   };
 
-  const handleToggleStar = (itemId) => {
-    toggleStar(user.userId, itemId);
-    refresh();
+  const handleDelete = (itemId) => {
+    withOptimisticUpdate({
+      getSnapshot: () => items,
+      setSnapshot: setItems,
+      optimistic: (curr) => curr.filter((i) => i.id !== itemId),
+      commit: () => {
+        deleteVaultItem(user.userId, itemId);
+        toast.success('Removed from vault');
+      },
+      onError: () => toast.error('Could not delete document.'),
+    }).catch(() => {});
   };
 
   const handleUpdateNote = (itemId, note) => {

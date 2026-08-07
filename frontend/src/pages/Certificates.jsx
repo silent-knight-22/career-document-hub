@@ -54,9 +54,11 @@ export default function Certificates() {
           <Search size={15} />
           <input
             className="vault-search-input"
+            type="search"
             placeholder="Search by name or issuer..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search certificates"
           />
         </div>
       )}

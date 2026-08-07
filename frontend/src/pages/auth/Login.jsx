@@ -8,9 +8,11 @@ import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/common/Input/Input';
 import Button from '../../components/common/Button/Button';
 import ThemeToggle from '../../components/common/ThemeToggle/ThemeToggle';
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import './Auth.css';
 
 export default function Login() {
+  useDocumentTitle('Sign in');
   const navigate = useNavigate();
   const { login } = useAuth();
   const [showPass, setShowPass] = useState(false);
@@ -38,13 +40,13 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <div className="auth-bg-decoration" />
+      <div className="auth-bg-decoration" aria-hidden="true" />
 
       <div className="auth-theme-toggle">
         <ThemeToggle />
       </div>
 
-      <div className="auth-card animate-scale-in">
+      <main id="main-content" className="auth-card animate-scale-in" tabIndex={-1}>
         <div className="auth-logo">
           <div className="auth-logo-icon">
             <Signature size={22} color="white" />
@@ -60,6 +62,7 @@ export default function Login() {
             label="Email address"
             id="login-email"
             type="email"
+            autoComplete="email"
             placeholder="you@example.com"
             icon={Mail}
             error={errors.email?.message}
@@ -73,6 +76,7 @@ export default function Login() {
             label="Password"
             id="login-password"
             type={showPass ? 'text' : 'password'}
+            autoComplete="current-password"
             placeholder="••••••••"
             icon={Lock}
             error={errors.password?.message}
@@ -81,7 +85,7 @@ export default function Login() {
                 type="button"
                 onClick={() => setShowPass(!showPass)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', color: 'var(--text-tertiary)' }}
-                tabIndex={-1}
+                aria-label={showPass ? 'Hide password' : 'Show password'}
               >
                 {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -106,7 +110,7 @@ export default function Login() {
           Don&apos;t have an account?{' '}
           <Link to="/register">Create one free</Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

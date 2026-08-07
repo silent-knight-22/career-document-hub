@@ -4,7 +4,7 @@ import { Brain, CheckCheck } from 'lucide-react';
 export default function AnalysisSkeleton({ step }) {
   const steps = [
     'Preparing document...',
-    'Sending to Groq 1.5 Flash...',
+    'Sending to Groq...',
     'Running deep analysis...',
     'Parsing results...',
     'Done!',

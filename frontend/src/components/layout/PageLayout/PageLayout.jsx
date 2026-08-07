@@ -1,11 +1,25 @@
 import Navbar from '../Navbar/Navbar';
+import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 
 /**
  * Standard page frame inside AppShell (navbar + content wrapper).
- * @param {{ title: string, children: import('react').ReactNode, className?: string }} props
- * Defaults to `page-container`. Pass a custom layout class (e.g. `sign-layout`) for full-bleed pages.
+ * Also sets the browser tab title for SEO.
+ *
+ * @param {{
+ *   title: string,
+ *   children: import('react').ReactNode,
+ *   className?: string,
+ *   description?: string,
+ * }} props
  */
-export default function PageLayout({ title, children, className = 'page-container' }) {
+export default function PageLayout({
+  title,
+  children,
+  className = 'page-container',
+  description,
+}) {
+  useDocumentTitle(title, { description });
+
   return (
     <>
       <Navbar title={title} />

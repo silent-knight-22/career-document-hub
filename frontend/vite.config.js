@@ -7,12 +7,11 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
-  optimizeDeps: {
-    include: ['pdfjs-dist'],
-  },
+  // Modern evergreen browsers (Chrome/Edge/Firefox/Safari last 2 years).
+  // Requires Web Crypto (PBKDF2), ES modules, and AbortController.
   build: {
+    target: 'es2022',
     chunkSizeWarningLimit: 1100,
-    // Keep heavy PDF code out of the critical preload path
     modulePreload: {
       resolveDependencies(filename, deps) {
         return deps.filter(
@@ -42,5 +41,8 @@ export default defineConfig({
         },
       },
     },
+  },
+  optimizeDeps: {
+    include: ['pdfjs-dist'],
   },
 })

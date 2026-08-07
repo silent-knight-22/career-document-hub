@@ -2,33 +2,8 @@ import { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { LayoutProvider, useLayout } from '../../../context/LayoutContext';
 import Sidebar from '../Sidebar/Sidebar';
+import PageLoader from '../../common/PageLoader/PageLoader';
 import './AppShell.css';
-
-function RouteFallback() {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '40vh',
-      }}
-      role="status"
-      aria-label="Loading page"
-    >
-      <div
-        className="animate-spin"
-        style={{
-          width: 32,
-          height: 32,
-          border: '3px solid var(--border-color)',
-          borderTopColor: 'var(--brand-primary)',
-          borderRadius: '50%',
-        }}
-      />
-    </div>
-  );
-}
 
 function AppShellInner() {
   const { sidebarOpen, closeSidebar } = useLayout();
@@ -38,6 +13,15 @@ function AppShellInner() {
     closeSidebar();
   }, [location.pathname, closeSidebar]);
 
+  useEffect(() => {
+    if (!sidebarOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeSidebar();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sidebarOpen, closeSidebar]);
+
   return (
     <div className="app-layout">
       <div
@@ -46,8 +30,8 @@ function AppShellInner() {
         aria-hidden={!sidebarOpen}
       />
       <Sidebar />
-      <div className="main-content">
-        <Suspense fallback={<RouteFallback />}>
+      <div className="main-content" id="main-content">
+        <Suspense fallback={<PageLoader />}>
           <Outlet />
         </Suspense>
       </div>

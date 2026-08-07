@@ -1,14 +1,18 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button/Button';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function NotFound() {
+  useDocumentTitle('Page not found');
   const { user } = useAuth();
   const home = user ? '/dashboard' : '/login';
 
   return (
     <main
+      id="main-content"
       className="auth-page"
+      tabIndex={-1}
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       <div className="card" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: 420 }}>

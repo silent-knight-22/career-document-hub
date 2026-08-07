@@ -56,7 +56,11 @@ export default function Sidebar() {
     : '?';
 
   return (
-    <aside className={`sidebar${sidebarOpen ? ' is-open' : ''}`}>
+    <aside
+      id="app-sidebar"
+      className={`sidebar${sidebarOpen ? ' is-open' : ''}`}
+      aria-label="Application"
+    >
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon">
           <Signature size={22} color="white" />

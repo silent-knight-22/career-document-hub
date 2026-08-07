@@ -7,6 +7,7 @@
 import { STORAGE_KEYS } from '../api/storage/keys';
 import { safeJsonParse } from '../utils/jsonStorage';
 import { logger } from '../utils/logger';
+import { fetchWithRetry } from '../utils/fetchWithRetry';
 
 const API_BASE    = 'https://api.groq.com/openai/v1';
 const KEY_STORAGE = STORAGE_KEYS.GROQ_API_KEY;
@@ -116,14 +117,16 @@ async function extractTextFromPdf(dataUrl) {
 // ════════════════════════════════════════════════════════════════
 // listModels — queries Groq Console models endpoint
 // ════════════════════════════════════════════════════════════════
-async function listModels(key) {
+async function listModels(key, { signal } = {}) {
   const url = `${API_BASE}/models`;
   logger.info('[Groq] listModels →', url);
 
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     headers: {
-      'Authorization': `Bearer ${key}`
-    }
+      Authorization: `Bearer ${key}`,
+    },
+    signal,
+    retries: 2,
   });
 
   if (!res.ok) {
@@ -219,13 +222,17 @@ async function groqPost(messages, config = {}) {
     bodyPayload.response_format = { type: 'json_object' };
   }
 
-  const res = await fetch(url, {
-    method:  'POST',
+  const res = await fetchWithRetry(url, {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key}`
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify(bodyPayload),
+    signal: config.signal,
+    // Chat completions: retry only on rate-limit / gateway errors
+    retries: 2,
+    timeoutMs: config.timeoutMs ?? 60_000,
   });
 
   if (!res.ok) {

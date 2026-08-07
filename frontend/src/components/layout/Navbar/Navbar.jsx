@@ -1,4 +1,4 @@
-import { Bell, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useLayout } from '../../../context/LayoutContext';
 import ThemeToggle from '../../common/ThemeToggle/ThemeToggle';
@@ -20,6 +20,7 @@ export default function Navbar({ title }) {
           className="navbar-menu-btn"
           onClick={openSidebar}
           aria-label="Open navigation menu"
+          aria-controls="app-sidebar"
         >
           <Menu size={20} />
         </button>
@@ -27,11 +28,12 @@ export default function Navbar({ title }) {
       </div>
       <div className="navbar-right">
         <ThemeToggle />
-        <button type="button" className="navbar-icon-btn" aria-label="Notifications">
-          <Bell size={18} />
-          <span className="navbar-notif-dot" aria-hidden="true" />
-        </button>
-        <div className="navbar-avatar" title={user?.name} aria-hidden="true">
+        <div
+          className="navbar-avatar"
+          title={user?.name}
+          aria-label={`Signed in as ${user?.name || 'user'}`}
+          role="img"
+        >
           {initials}
         </div>
       </div>

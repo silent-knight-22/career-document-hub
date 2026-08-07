@@ -10,8 +10,10 @@
  * - Never put secrets in VITE_* env vars that ship to the client bundle.
  */
 
-export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+import { API_BASE_URL, NETWORK } from '../config/env';
+import { ApiError, fetchWithRetry, getErrorMessage } from '../utils/fetchWithRetry';
+
+export { API_BASE_URL, ApiError, getErrorMessage };
 
 const TOKEN_KEY = 'cdh_access_token';
 
@@ -33,7 +35,6 @@ export function setAccessToken(token) {
 export function clearAccessToken() {
   try {
     sessionStorage.removeItem(TOKEN_KEY);
-    // Migrate away from any legacy localStorage token
     localStorage.removeItem('cdh_token');
   } catch {
     /* ignore quota / privacy mode */
@@ -41,19 +42,29 @@ export function clearAccessToken() {
 }
 
 /**
- * Placeholder fetch wrapper — unused until backend is wired.
- * Services should migrate here instead of calling fetch/axios ad hoc.
- *
  * @param {string} path
- * @param {RequestInit} [options]
+ * @param {RequestInit & {
+ *   timeoutMs?: number,
+ *   retries?: number,
+ *   parseJson?: boolean,
+ * }} [options]
+ * @returns {Promise<Response | unknown>}
  */
 export async function apiRequest(path, options = {}) {
   if (typeof path !== 'string' || !path.startsWith('/')) {
-    throw new Error('API path must be a string starting with "/"');
+    throw new ApiError('API path must be a string starting with "/"');
   }
 
-  const headers = new Headers(options.headers || {});
-  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+  const {
+    timeoutMs = NETWORK.timeoutMs,
+    retries = NETWORK.maxRetries,
+    parseJson = false,
+    headers: initHeaders,
+    ...rest
+  } = options;
+
+  const headers = new Headers(initHeaders || {});
+  if (!headers.has('Content-Type') && !(rest.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
   headers.set('Accept', 'application/json');
@@ -61,14 +72,40 @@ export async function apiRequest(path, options = {}) {
   const token = getAccessToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
+  const method = (rest.method || 'GET').toUpperCase();
+  // Only retry safe/idempotent methods by default
+  const effectiveRetries = method === 'GET' || method === 'HEAD' ? retries : 0;
+
+  const response = await fetchWithRetry(`${API_BASE_URL}${path}`, {
+    ...rest,
+    method,
     headers,
     credentials: 'same-origin',
+    timeoutMs,
+    retries: effectiveRetries,
   });
 
   if (response.status === 401) {
     clearAccessToken();
+  }
+
+  if (!response.ok) {
+    let body;
+    try {
+      body = await response.json();
+    } catch {
+      body = undefined;
+    }
+    const message =
+      body?.message ||
+      body?.error?.message ||
+      `Request failed (${response.status})`;
+    throw new ApiError(message, { status: response.status, body });
+  }
+
+  if (parseJson) {
+    if (response.status === 204) return null;
+    return response.json();
   }
 
   return response;
