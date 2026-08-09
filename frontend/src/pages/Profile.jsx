@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +12,8 @@ import DangerZone from '../components/profile/DangerZone';
 import DeleteAccountModal from '../components/profile/DeleteAccountModal';
 import AccountInfo from '../components/profile/AccountInfo';
 import ProfileHero from '../components/profile/ProfileHero';
-import { getLocalStorageUsage } from '../utils/storageHelper';
+import { getLocalStorageUsage } from '../utils/jsonStorage';
+import { getErrorMessage } from '../utils/fetchWithRetry';
 import './Profile.css';
 
 export default function Profile() {
@@ -20,11 +21,11 @@ export default function Profile() {
   const navigate = useNavigate();
   const userId = user?.userId || '';
 
-  const profile = useLocalSnapshot(() => getUserProfile(userId), [userId]);
-  const sigs = useLocalSnapshot(() => getSignatures(userId), [userId]);
-  const docs = useLocalSnapshot(() => getDocuments(userId), [userId]);
-  const docStats = useMemo(() => getDocumentStats(docs), [docs]);
-  const storage = useLocalSnapshot(() => getLocalStorageUsage(), [userId]);
+  const profile = useLocalSnapshot(() => getUserProfile(userId), userId);
+  const sigs = useLocalSnapshot(() => getSignatures(userId), userId);
+  const docs = useLocalSnapshot(() => getDocuments(userId), userId);
+  const docStats = getDocumentStats(docs);
+  const storage = useLocalSnapshot(() => getLocalStorageUsage(), userId);
 
   const [editName, setEditName] = useState(false);
   const [name, setName] = useState(user?.name || '');
@@ -32,31 +33,38 @@ export default function Profile() {
   const [showDelete, setShowDelete] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
 
-  const initials = useMemo(
-    () =>
-      user?.name
-        ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-        : '?',
-    [user?.name],
-  );
+  const initials = user?.name
+    ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?';
 
-  const handleSaveName = useCallback(() => {
-    if (!name.trim()) return toast.error('Name cannot be empty');
+  const handleSaveName = () => {
+    if (!name.trim()) {
+      toast.error('Name cannot be empty');
+      return;
+    }
     setSaving(true);
-    updateUserProfile(user.userId, { name: name.trim() });
-    updateSession({ name: name.trim() });
-    toast.success('Name updated!');
-    setSaving(false);
-    setEditName(false);
-  }, [name, user?.userId, updateSession]);
+    try {
+      updateUserProfile(user.userId, { name: name.trim() });
+      updateSession({ name: name.trim() });
+      toast.success('Name updated');
+      setEditName(false);
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Could not update name'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const handleDeleteAccount = useCallback(() => {
-    if (deleteInput !== user.email) return toast.error('Email does not match');
+  const handleDeleteAccount = () => {
+    if (deleteInput !== user.email) {
+      toast.error('Email does not match');
+      return;
+    }
     deleteAccount(user.userId);
     logout();
     toast.success('Account deleted');
     navigate('/login');
-  }, [deleteInput, user, logout, navigate]);
+  };
 
   return (
     <PageLayout title="Profile">
@@ -121,8 +129,8 @@ export default function Profile() {
             </div>
             <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '0.5rem', lineHeight: '1.4' }}>
               {storage.percent > 80
-                ? '⚠️ Storage quota is almost full! Please delete some documents to make space.'
-                : '💡 Once the Spring Boot backend is active, this local limit will disappear.'
+                ? 'Storage quota is almost full. Please delete some documents to make space.'
+                : 'Once the Spring Boot backend is active, this local limit will disappear.'
               }
             </p>
           </div>

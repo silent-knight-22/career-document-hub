@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, PenLine, Type } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { saveSignature } from '../services/signatureService';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import Input from '../components/common/Input/Input';
+import PageLoader from '../components/common/PageLoader/PageLoader';
+import { getErrorMessage } from '../utils/fetchWithRetry';
 import './CreateSignature.css';
 
 const DrawTab = lazy(() => import('../components/signature/DrawTab'));
@@ -18,50 +20,25 @@ const TABS = [
   { id: 'type', icon: Type, label: 'Type' },
 ];
 
-function TabFallback() {
-  return (
-    <div
-      className="tab-content"
-      style={{ minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      role="status"
-      aria-label="Loading tab"
-    >
-      <div
-        className="animate-spin"
-        style={{
-          width: 28,
-          height: 28,
-          border: '3px solid var(--border-color)',
-          borderTopColor: 'var(--brand-primary)',
-          borderRadius: '50%',
-        }}
-      />
-    </div>
-  );
-}
-
 export default function CreateSignature() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState('draw');
   const [sigName, setSigName] = useState('');
 
-  const handleSave = useCallback(
-    async (dataUrl, type) => {
-      try {
-        saveSignature(user.userId, {
-          name: sigName.trim() || `My Signature ${Date.now()}`,
-          dataUrl,
-          type,
-        });
-        toast.success('Signature saved successfully!');
-        navigate('/signatures');
-      } catch {
-        toast.error('Failed to save signature');
-      }
-    },
-    [user?.userId, sigName, navigate],
-  );
+  const handleSave = async (dataUrl, type) => {
+    try {
+      saveSignature(user.userId, {
+        name: sigName.trim() || `My Signature ${Date.now()}`,
+        dataUrl,
+        type,
+      });
+      toast.success('Signature saved successfully');
+      navigate('/signatures');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to save signature'));
+    }
+  };
 
   return (
     <PageLayout title="Create Signature">
@@ -77,6 +54,7 @@ export default function CreateSignature() {
             placeholder="Name this signature (optional)"
             value={sigName}
             onChange={(e) => setSigName(e.target.value)}
+            aria-label="Signature name"
           />
         </div>
       </div>
@@ -98,7 +76,7 @@ export default function CreateSignature() {
           ))}
         </div>
 
-        <Suspense fallback={<TabFallback />}>
+        <Suspense fallback={<PageLoader label="Loading tab" minHeight={200} />}>
           {tab === 'draw' && <DrawTab onSave={handleSave} />}
           {tab === 'upload' && <UploadTab onSave={handleSave} />}
           {tab === 'type' && <TypeTab onSave={handleSave} />}

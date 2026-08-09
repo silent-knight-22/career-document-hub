@@ -23,7 +23,7 @@ export default function Certificates() {
 
   const handleSave = (data) => {
     addCertificate(user.userId, data);
-    toast.success('Certificate added! 🏆');
+    toast.success('Certificate added');
     refresh();
   };
 

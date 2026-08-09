@@ -9,6 +9,7 @@ import Input from '../../components/common/Input/Input';
 import Button from '../../components/common/Button/Button';
 import ThemeToggle from '../../components/common/ThemeToggle/ThemeToggle';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+import { getErrorMessage } from '../../utils/fetchWithRetry';
 import './Auth.css';
 
 import PasswordStrength from '../../components/auth/PasswordStrength';
@@ -25,11 +26,14 @@ export default function Register() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm();
 
-  const password = watch('password', '');
+  const [password, setPassword] = useState('');
+  const passwordField = register('password', {
+    required: 'Password is required',
+    minLength: { value: 8, message: 'At least 8 characters required' },
+  });
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -39,7 +43,7 @@ export default function Register() {
       toast.success('Account created! Welcome to Career Document Hub');
       navigate('/dashboard');
     } catch (err) {
-      toast.error(err.message);
+      toast.error(getErrorMessage(err, 'Registration failed'));
     } finally {
       setLoading(false);
     }
@@ -100,10 +104,11 @@ export default function Register() {
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               }
-              {...register('password', {
-                required: 'Password is required',
-                minLength: { value: 8, message: 'At least 8 characters required' },
-              })}
+              {...passwordField}
+              onChange={(e) => {
+                passwordField.onChange(e);
+                setPassword(e.target.value);
+              }}
             />
             <PasswordStrength password={password} />
           </div>

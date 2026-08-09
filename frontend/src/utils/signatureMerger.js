@@ -50,7 +50,7 @@ export async function mergeAndDownload({
       a.download = `signed_${doc.name.replace(/\.[^.]+$/, '')}.png`;
       a.click();
 
-      toast.success('Document signed and downloaded! 🎉');
+      toast.success('Document signed and downloaded');
       if (onComplete) onComplete();
     });
   };

@@ -17,10 +17,7 @@ const CHAT_PREFIX = STORAGE_KEYS.CHAT;
 const MODEL_PREFERENCE = [
   'llama-3.3-70b-versatile',
   'llama-3.1-8b-instant',
-  'mixtral-8x7b-32768',
-  'gemma2-9b-it',
   'meta-llama/llama-4-scout-17b-16e-instruct',
-  'llama-3.2-11b-vision-preview',
 ];
 
 const SESSION_MODEL_KEY = 'cdh_groq_resolved_model';
@@ -339,7 +336,7 @@ export async function verifyApiKey(key) {
     if (err.message.includes('401') || err.message.toLowerCase().includes('unauthorized')) {
       return { ok: false, error: 'Invalid Groq API key. Please check your credentials.' };
     }
-    return { ok: false, error: err.message || 'Failed to verify key.' };
+    return { ok: false, error: err?.message || 'Failed to verify key.' };
   }
 }
 

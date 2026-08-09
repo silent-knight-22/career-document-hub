@@ -36,10 +36,3 @@ export const setDefaultSignature = (userId, sigId) => {
     isDefault: s.id === sigId,
   }));
 };
-
-export const renameSignature = (userId, sigId, newName) => {
-  store.update(userId, sigId, { name: newName });
-};
-
-export const getDefaultSignature = (userId) =>
-  getSignatures(userId).find((s) => s.isDefault) || null;

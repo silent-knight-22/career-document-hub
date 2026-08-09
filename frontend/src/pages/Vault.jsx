@@ -28,7 +28,7 @@ export default function Vault() {
 
   const handleSave = (data) => {
     addVaultItem(user.userId, data);
-    toast.success('Document added to vault! 🗂️');
+    toast.success('Document added to vault');
     refresh();
   };
 

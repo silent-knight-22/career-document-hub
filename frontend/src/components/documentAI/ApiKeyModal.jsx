@@ -68,16 +68,18 @@ export default function ApiKeyModal({
               }}
             >
               <option value="">Auto-detect best model (Recommended)</option>
-              <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Llama 70B - Recommended)</option>
-              <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Llama 8B - High Speed)</option>
-              <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 (Mixtral 8x7B)</option>
-              <option value="meta-llama/llama-4-scout-17b-16e-instruct">meta-llama/llama-4-scout-17b-16e-instruct (Llama 4 Scout Vision)</option>
+              <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Llama 70B)</option>
+              <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Llama 8B)</option>
+              <option value="meta-llama/llama-4-scout-17b-16e-instruct">meta-llama/llama-4-scout-17b-16e-instruct (Vision)</option>
               {availableModels
-                .filter(m => !['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'meta-llama/llama-4-scout-17b-16e-instruct'].includes(m))
+                .filter((m) => ![
+                  'llama-3.3-70b-versatile',
+                  'llama-3.1-8b-instant',
+                  'meta-llama/llama-4-scout-17b-16e-instruct',
+                ].includes(m))
                 .map((m) => (
                   <option key={m} value={m}>{m}</option>
-                ))
-              }
+                ))}
             </select>
             <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '0.375rem', lineHeight: '1.4' }}>
               <strong>Tip:</strong> Groq offers extremely fast, free-tier reasoning. For complex document summarization, we recommend <strong>Llama-3.3-70B</strong>. Image uploads will automatically utilize the <strong>Llama 4 Scout Vision</strong> MoE engine.

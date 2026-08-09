@@ -5,11 +5,11 @@ import { saveDocument } from '../services/documentService';
 import {
   FILE_ACCEPT,
   FILE_LIMITS,
-  formatBytes,
   readFileAsDataUrl,
   validateUploadFile,
 } from '../utils/files';
 import { sanitizeText } from '../utils/sanitize';
+import { getErrorMessage } from '../utils/fetchWithRetry';
 
 function trySaveDocument(userId, data) {
   try {
@@ -57,7 +57,7 @@ export default function useDocumentUpload(userId, onUploadSuccess) {
         toast.success(`"${file.name}" uploaded successfully!`);
         onUploadSuccess?.();
       } catch (err) {
-        toast.error(err.message || 'Upload failed. Please try again.');
+        toast.error(getErrorMessage(err, 'Upload failed. Please try again.'));
       } finally {
         setUploading(false);
         setUploadProgress(0);

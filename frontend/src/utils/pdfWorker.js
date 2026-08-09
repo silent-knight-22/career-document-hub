@@ -27,13 +27,6 @@ export function ensurePdfJs() {
   return loadPromise;
 }
 
-/** @param {string} [src] */
-export async function configurePdfWorker(src) {
-  const { pdfjs, localWorkerSrc } = await ensurePdfJs();
-  pdfjs.GlobalWorkerOptions.workerSrc = src || localWorkerSrc;
-  return pdfjs;
-}
-
 /**
  * Decode a data-URL (or raw base64) into a fresh Uint8Array.
  * @param {string} dataUrl

@@ -25,9 +25,10 @@ function redactValue(value) {
 
 function emit(method, args) {
   if (!import.meta.env.DEV && method !== 'error') return;
-  // Always allow error in prod but redacted
-  // eslint-disable-next-line no-console
-  console[method](...args.map(redactValue));
+  const sink = globalThis.console?.[method];
+  if (typeof sink === 'function') {
+    sink(...args.map(redactValue));
+  }
 }
 
 export const logger = {

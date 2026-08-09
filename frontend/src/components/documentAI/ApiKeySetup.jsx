@@ -3,6 +3,7 @@ import { Brain, ExternalLink, Key, Loader2, AlertCircle, CheckCircle2 } from 'lu
 import toast from 'react-hot-toast';
 import Button from '../common/Button/Button';
 import { setApiKey, verifyApiKey } from '../../services/groqService';
+import { getErrorMessage } from '../../utils/fetchWithRetry';
 
 export default function ApiKeySetup({ onSaved }) {
   const [key, setKey]         = useState('');
@@ -27,10 +28,10 @@ export default function ApiKeySetup({ onSaved }) {
       }
       setFoundModel(result.model);
       setApiKey(key.trim());
-      toast.success(`Key verified ✓  Using ${result.model}`);
+      toast.success(`Key verified — using ${result.model}`);
       onSaved();
     } catch (err) {
-      setVerifyError(err.message || 'Failed to save API key.');
+      setVerifyError(getErrorMessage(err, 'Failed to save API key.'));
     } finally {
       setSaving(false);
     }
@@ -42,7 +43,7 @@ export default function ApiKeySetup({ onSaved }) {
         <div className="ai-setup-icon"><Brain size={32} /></div>
         <h2>Set up AI Document Intelligence</h2>
         <p>
-          This feature uses <strong>Groq's high-speed Llama & Mixtral models</strong> to deeply analyse your documents.
+          This feature uses <strong>Groq&apos;s high-speed Llama models</strong> to deeply analyse your documents.
           The integration automatically selects the best available model for your API key.
           Get a free key from the Groq Console — no credit card required.
         </p>

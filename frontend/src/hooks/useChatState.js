@@ -7,6 +7,7 @@ import {
   clearChatHistory,
   getSuggestedQuestions
 } from '../services/groqService';
+import { getErrorMessage } from '../utils/fetchWithRetry';
 
 export default function useChatState(analysis, docId) {
   const [history, setHistory]   = useState(() => getChatHistory(docId));
@@ -41,7 +42,7 @@ export default function useChatState(analysis, docId) {
     } catch (err) {
       const finalHistory = newHistory.map((h, i) =>
         i === newHistory.length - 1
-          ? { ...h, answer: `⚠️ Error: ${err.message}` }
+          ? { ...h, answer: `Error: ${getErrorMessage(err, 'Failed to get a response.')}` }
           : h
       );
       setHistory(finalHistory);

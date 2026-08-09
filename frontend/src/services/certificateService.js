@@ -29,10 +29,6 @@ export const addCertificate = (
   return store.insert(userId, newCert, { prepend: true });
 };
 
-export const updateCertificate = (userId, certId, updates) => {
-  store.update(userId, certId, updates);
-};
-
 export const deleteCertificate = (userId, certId) => {
   store.remove(userId, certId);
 };
@@ -41,7 +37,7 @@ export const deleteCertificate = (userId, certId) => {
 export const getCertExpiryStatus = (expiryDate) =>
   getExpiryStatus(expiryDate, { whenEmpty: CERT_NO_EXPIRY });
 
-export const ISSUER_COLORS = {
+const ISSUER_COLORS = {
   Google: '#4285f4',
   AWS: '#ff9900',
   Microsoft: '#00a4ef',

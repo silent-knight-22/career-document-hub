@@ -54,16 +54,5 @@ export const toggleStar = (userId, itemId) => {
   );
 };
 
-export const getExpiringItems = (userId, daysAhead = 90) => {
-  const now = new Date();
-  const cutoff = new Date(now.getTime() + daysAhead * 86400000);
-  return getVaultItems(userId)
-    .filter((i) => {
-      if (!i.expiryDate) return false;
-      return new Date(i.expiryDate) <= cutoff;
-    })
-    .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
-};
-
 /** Re-export shared helper (null when no date). */
 export const getExpiryStatus = (expiryDate) => computeExpiryStatus(expiryDate);

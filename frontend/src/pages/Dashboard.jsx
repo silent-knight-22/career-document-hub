@@ -25,8 +25,8 @@ export default function Dashboard() {
   const { user } = useAuth();
   const userId = user?.userId || '';
 
-  const signatures = useLocalSnapshot(() => getSignatures(userId), [userId]);
-  const documents = useLocalSnapshot(() => getDocuments(userId), [userId]);
+  const signatures = useLocalSnapshot(() => getSignatures(userId), userId);
+  const documents = useLocalSnapshot(() => getDocuments(userId), userId);
   const stats = useMemo(() => getDocumentStats(documents), [documents]);
 
   const recentSigs = useMemo(

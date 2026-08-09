@@ -3,6 +3,8 @@
  * React already escapes JSX text; this blocks control chars / oversized payloads.
  */
 
+// Strip C0 controls except TAB/LF/CR-equivalent already excluded by ranges
+// eslint-disable-next-line no-control-regex -- intentional sanitization
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 
 /**

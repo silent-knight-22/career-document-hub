@@ -11,6 +11,7 @@ import {
   validateUploadFile,
 } from '../../utils/files';
 import { sanitizeExternalUrl, sanitizeText } from '../../utils/sanitize';
+import { getErrorMessage } from '../../utils/fetchWithRetry';
 
 const emptyForm = () => ({
   name: '',
@@ -45,7 +46,7 @@ export default function AddCertModal({ isOpen, onClose, onSave }) {
         });
         setFile(next);
       } catch (err) {
-        toast.error(err.message || 'Invalid file.');
+        toast.error(getErrorMessage(err, 'Invalid file.'));
       }
     },
   });
@@ -101,7 +102,7 @@ export default function AddCertModal({ isOpen, onClose, onSave }) {
       });
       handleClose();
     } catch (err) {
-      toast.error(err.message || 'Failed to save certificate.');
+      toast.error(getErrorMessage(err, 'Failed to save certificate.'));
     } finally {
       setSaving(false);
     }

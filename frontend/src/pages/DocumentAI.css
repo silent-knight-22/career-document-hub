@@ -176,19 +176,6 @@
 }
 .ai-reanalyse-btn:hover { color: var(--brand-primary); border-color: var(--brand-primary); }
 
-.ai-error-box {
-  background: #fee2e2; border: 1px solid #fca5a5;
-  border-radius: var(--radius-md); padding: 0.625rem 0.75rem;
-  font-size: 0.76rem; color: #dc2626;
-  display: flex; flex-direction: column; gap: 0.25rem;
-}
-.ai-error-box svg { flex-shrink: 0; }
-.ai-error-box button {
-  font-size: 0.72rem; color: #dc2626; font-weight: 700;
-  background: none; border: none; cursor: pointer; text-decoration: underline;
-  font-family: var(--font-family); text-align: left;
-}
-
 /* ── RIGHT PANEL ─────────────────────────────────────── */
 .ai-right-panel {
   flex: 1;

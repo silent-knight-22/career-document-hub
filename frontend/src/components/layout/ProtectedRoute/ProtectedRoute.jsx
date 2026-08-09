@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getCurrentSession, logoutUser } from '../../../services/authService';
+import PageLoader from '../../common/PageLoader/PageLoader';
 
 /**
  * Ensures a valid session exists in both React state and localStorage user directory.
@@ -22,29 +23,7 @@ export default function ProtectedRoute({ children }) {
   }, [user]);
 
   if (loading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-        }}
-        role="status"
-        aria-label="Checking session"
-      >
-        <div
-          className="animate-spin"
-          style={{
-            width: 32,
-            height: 32,
-            border: '3px solid var(--border-color)',
-            borderTopColor: 'var(--brand-primary)',
-            borderRadius: '50%',
-          }}
-        />
-      </div>
-    );
+    return <PageLoader label="Checking session" minHeight="100vh" />;
   }
 
   if (!gate.ok) {

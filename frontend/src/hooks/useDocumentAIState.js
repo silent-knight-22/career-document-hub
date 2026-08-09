@@ -8,8 +8,9 @@ import {
   cacheAnalysis,
   clearAnalysis,
   verifyApiKey,
-  getSelectedModel
+  getSelectedModel,
 } from '../services/groqService';
+import { getErrorMessage } from '../utils/fetchWithRetry';
 
 export default function useDocumentAIState() {
   const [apiReady, setApiReady]       = useState(hasApiKey());
@@ -61,8 +62,8 @@ export default function useDocumentAIState() {
       toast.success('Analysis complete!');
     } catch (err) {
       setAnaState('error');
-      setErrorMsg(err.message);
-      if (err.message === 'NO_API_KEY') {
+      setErrorMsg(getErrorMessage(err, 'Analysis failed'));
+      if (err?.message === 'NO_API_KEY') {
         setApiReady(false);
       }
     }
@@ -90,9 +91,9 @@ export default function useDocumentAIState() {
       setNewKey('');
       setModalKeyError('');
       setSelectedModelLocal(getSelectedModel());
-      toast.success('API key verified and updated!');
+      toast.success('API key verified and updated');
     } catch (err) {
-      setModalKeyError(err.message || 'Failed to save API key.');
+      setModalKeyError(getErrorMessage(err, 'Failed to save API key.'));
     } finally {
       setModalSaving(false);
     }

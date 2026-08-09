@@ -9,6 +9,7 @@ import {
   readFileAsDataUrl,
   validateUploadFile,
 } from '../../utils/files';
+import { getErrorMessage } from '../../utils/fetchWithRetry';
 
 export default function UploadTab({ onSave }) {
   const [preview, setPreview] = useState(null);
@@ -35,7 +36,7 @@ export default function UploadTab({ onSave }) {
         const dataUrl = await readFileAsDataUrl(file);
         setPreview(dataUrl);
       } catch (err) {
-        toast.error(err.message || 'Invalid signature image.');
+        toast.error(getErrorMessage(err, 'Invalid signature image.'));
       } finally {
         setLoading(false);
       }

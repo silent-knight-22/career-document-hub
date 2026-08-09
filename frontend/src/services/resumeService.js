@@ -25,5 +25,3 @@ export const getResume = (userId) =>
   readJson(keyFor(userId), structuredClone(RESUME_DEFAULTS));
 
 export const saveResume = (userId, resumeData) => writeJson(keyFor(userId), resumeData);
-
-export const clearResume = (userId) => localStorage.removeItem(keyFor(userId));

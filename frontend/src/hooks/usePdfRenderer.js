@@ -7,41 +7,33 @@ import { logger } from '../utils/logger';
  * pdf.js is loaded on demand so browsing other routes stays light.
  */
 export default function usePdfRenderer(doc) {
-  const [docImage, setDocImage] = useState(null);
-  const [loadingPdf, setLoadingPdf] = useState(Boolean(doc?.type === 'pdf'));
-  const [pdfError, setPdfError] = useState(null);
+  const docId = doc?.id ?? null;
+  const docType = doc?.type ?? null;
+  const dataUrl = doc?.dataUrl ?? null;
 
-  const docId = doc?.id;
-  const docType = doc?.type;
-  const dataUrl = doc?.dataUrl;
+  const isImage = Boolean(docId && dataUrl && docType === 'image');
+  const isPdf = Boolean(docId && dataUrl && docType === 'pdf');
+
+  const [docImage, setDocImage] = useState(null);
+  const [loadingPdf, setLoadingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+  const [trackedKey, setTrackedKey] = useState(() => `${docId}:${docType}`);
+
+  // Reset local state when the document identity changes (React-recommended pattern).
+  const nextKey = `${docId}:${docType}`;
+  if (nextKey !== trackedKey) {
+    setTrackedKey(nextKey);
+    setDocImage(isImage ? dataUrl : null);
+    setLoadingPdf(isPdf);
+    setPdfError(
+      docId && dataUrl && !isImage && !isPdf ? 'Unsupported document type.' : null,
+    );
+  }
 
   useEffect(() => {
-    if (!docId || !dataUrl) {
-      setDocImage(null);
-      setLoadingPdf(false);
-      setPdfError(null);
-      return undefined;
-    }
+    if (!isPdf || !dataUrl) return undefined;
 
     let cancelled = false;
-
-    if (docType === 'image') {
-      setDocImage(dataUrl);
-      setLoadingPdf(false);
-      setPdfError(null);
-      return undefined;
-    }
-
-    if (docType !== 'pdf') {
-      setDocImage(null);
-      setLoadingPdf(false);
-      setPdfError('Unsupported document type.');
-      return undefined;
-    }
-
-    setLoadingPdf(true);
-    setPdfError(null);
-    setDocImage(null);
 
     const renderPdfPage = async () => {
       try {
@@ -65,7 +57,6 @@ export default function usePdfRenderer(doc) {
           isEvalSupported: false,
         });
         const pdf = await loadingTask.promise;
-
         if (cancelled) return;
 
         if (pdf.numPages === 0) {
@@ -100,7 +91,11 @@ export default function usePdfRenderer(doc) {
     return () => {
       cancelled = true;
     };
-  }, [docId, docType, dataUrl]);
+  }, [isPdf, docId, dataUrl]);
 
-  return { docImage, loadingPdf, pdfError };
+  return {
+    docImage: isImage ? dataUrl : docImage,
+    loadingPdf: isPdf ? loadingPdf : false,
+    pdfError: isImage ? null : pdfError,
+  };
 }

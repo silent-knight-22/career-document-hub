@@ -13,6 +13,7 @@ import {
   validateUploadFile,
 } from '../../utils/files';
 import { sanitizeText } from '../../utils/sanitize';
+import { getErrorMessage } from '../../utils/fetchWithRetry';
 
 export default function UploadModal({ isOpen, onClose, onSave }) {
   const [file, setFile] = useState(null);
@@ -41,7 +42,7 @@ export default function UploadModal({ isOpen, onClose, onSave }) {
         });
         setFile(next);
       } catch (err) {
-        toast.error(err.message || 'Invalid file.');
+        toast.error(getErrorMessage(err, 'Invalid file.'));
       }
     },
   });
@@ -89,7 +90,7 @@ export default function UploadModal({ isOpen, onClose, onSave }) {
       if (err.name === 'QuotaExceededError' || err.code === 22) {
         toast.error('Storage full. Delete some documents to free space.');
       } else {
-        toast.error(err.message || 'Upload failed. Please try again.');
+        toast.error(getErrorMessage(err, 'Upload failed. Please try again.'));
       }
     } finally {
       setSaving(false);

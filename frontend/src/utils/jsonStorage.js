@@ -42,3 +42,21 @@ export function writeJson(key, value) {
     throw err;
   }
 }
+
+/** Approximate localStorage usage for the Profile quota meter. */
+export function getLocalStorageUsage() {
+  let totalBytes = 0;
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    const value = localStorage.getItem(key);
+    totalBytes += ((key?.length || 0) + (value?.length || 0)) * 2;
+  }
+  const usedMb = totalBytes / (1024 * 1024);
+  const limitMb = 5.0;
+  const percent = Math.min((usedMb / limitMb) * 100, 100);
+  return {
+    usedMb: parseFloat(usedMb.toFixed(2)),
+    limitMb,
+    percent: parseFloat(percent.toFixed(1)),
+  };
+}

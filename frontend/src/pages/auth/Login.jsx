@@ -9,6 +9,7 @@ import Input from '../../components/common/Input/Input';
 import Button from '../../components/common/Button/Button';
 import ThemeToggle from '../../components/common/ThemeToggle/ThemeToggle';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+import { getErrorMessage } from '../../utils/fetchWithRetry';
 import './Auth.css';
 
 export default function Login() {
@@ -32,7 +33,7 @@ export default function Login() {
       toast.success(`Welcome back, ${session.name.split(' ')[0]}!`);
       navigate('/dashboard');
     } catch (err) {
-      toast.error(err.message);
+      toast.error(getErrorMessage(err, 'Sign in failed'));
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Brain, Sparkles, MessageSquare, BookOpen, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getVaultItems } from '../services/vaultService';
@@ -39,7 +39,7 @@ const EMPTY_FEATURES = [
 export default function DocumentAI() {
   const { user } = useAuth();
   const userId = user?.userId || '';
-  const availableModels = useLocalSnapshot(() => getAvailableModels(), [userId]);
+  const availableModels = useLocalSnapshot(() => getAvailableModels(), userId);
   const {
     apiReady,
     setApiReady,
@@ -67,17 +67,20 @@ export default function DocumentAI() {
     handleSaveKey,
   } = useDocumentAIState();
 
-  const vaultDocs = useLocalSnapshot(() => getVaultItems(userId), [userId]);
+  const vaultDocs = useLocalSnapshot(() => getVaultItems(userId), userId);
   const signDocs = useLocalSnapshot(
     () => getDocuments(userId).filter((d) => d.dataUrl),
-    [userId],
+    userId,
   );
   const allDocs = docTab === 'vault' ? vaultDocs : signDocs;
 
-  const analysedIds = useMemo(() => {
-    const ids = [...vaultDocs, ...signDocs].map((d) => d.id);
+  // Re-read analysis badges when docs change or a new analysis is cached/cleared
+  const analysedIds = useLocalSnapshot(() => {
+    const ids = [...getVaultItems(userId), ...getDocuments(userId).filter((d) => d.dataUrl)].map(
+      (d) => d.id,
+    );
     return getAnalysedDocIdSet(ids);
-  }, [vaultDocs, signDocs, analysisState]);
+  }, `${userId}:${analysisState}:${analysis?._cachedAt ?? ''}`);
 
   if (!apiReady) {
     return (
