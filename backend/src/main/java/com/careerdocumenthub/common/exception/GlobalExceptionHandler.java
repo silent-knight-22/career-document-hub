@@ -10,6 +10,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,6 +52,28 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(safeClientMessage(ex.getMessage(), "Invalid request")));
     }
 
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidFile(InvalidFileException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(safeClientMessage(ex.getMessage(), "Invalid file")));
+    }
+
+    @ExceptionHandler({
+            MaxUploadSizeExceededException.class,
+            MultipartException.class,
+            MissingServletRequestPartException.class
+    })
+    public ResponseEntity<ApiResponse<Void>> handleMultipart(Exception ex) {
+        log.debug("Multipart error: {}", ex.getClass().getSimpleName());
+        String message = ex instanceof MaxUploadSizeExceededException
+                ? "File too large."
+                : "Invalid or missing file upload.";
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(message));
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity
@@ -78,6 +103,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("An account with this email already exists."));
     }
 
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ApiResponse<Void>> handleStorage(StorageException ex) {
+        log.error("Storage failure: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("File storage failed. Please try again."));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex) {
         log.error("Unhandled exception", ex);
@@ -92,7 +125,8 @@ public class GlobalExceptionHandler {
         }
         String lower = message.toLowerCase();
         if (lower.contains("mongodb") || lower.contains("jdbc") || lower.contains("password")
-                || lower.contains("secret") || lower.contains("token")) {
+                || lower.contains("secret") || lower.contains("token")
+                || lower.contains("c:\\") || lower.contains("/users/") || lower.contains("storage/")) {
             return fallback;
         }
         return message;

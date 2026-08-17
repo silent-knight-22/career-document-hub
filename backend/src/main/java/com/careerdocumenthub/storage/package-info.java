@@ -1,4 +1,4 @@
 /**
- * File storage abstraction (local / object storage) for uploaded binaries (Phase 6+).
+ * File storage abstraction (local filesystem now; S3-compatible later).
  */
 package com.careerdocumenthub.storage;

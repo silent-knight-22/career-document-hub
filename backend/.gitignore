@@ -5,6 +5,10 @@ src/main/resources/application-local.properties
 .env.*
 !.env.example
 
+# Local uploaded files (Phase 4)
+data/
+**/data/storage/
+
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar

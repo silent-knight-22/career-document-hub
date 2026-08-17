@@ -8,7 +8,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(
         Cors cors,
-        Security security
+        Security security,
+        Storage storage
 ) {
     public record Cors(String allowedOrigins) {
     }
@@ -20,5 +21,11 @@ public record AppProperties(
          */
         public record Jwt(String secret, long expirationMinutes) {
         }
+    }
+
+    /**
+     * @param localRoot relative or absolute directory for local file storage (never expose to clients)
+     */
+    public record Storage(String localRoot) {
     }
 }

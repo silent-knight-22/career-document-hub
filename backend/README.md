@@ -5,6 +5,7 @@ Spring Boot API for Career Document Hub.
 **Phase 1:** foundation (config, CORS, exceptions, OpenAPI, health, security skeleton)  
 **Phase 2:** authentication (register/login/me/logout + JWT)
 **Phase 3:** user profile (`GET/PUT /users/me`)
+**Phase 4:** Document Vault + Signable Documents (separate domains, local file storage)
 
 ## Requirements
 
@@ -24,6 +25,7 @@ Automated tests use **embedded MongoDB** (flapdoodle) and a test-only JWT secret
 | `CORS_ALLOWED_ORIGINS` | No | Comma-separated frontend origins |
 | `JWT_SECRET` | **Yes (run)** | HS256 signing secret, ≥32 UTF-8 bytes |
 | `JWT_EXPIRATION_MINUTES` | No | Access token lifetime (default **60**) |
+| `STORAGE_LOCAL_ROOT` | No | Local file storage directory (default `./data/storage`) |
 | `SERVER_PORT` | No | HTTP port (default: `8080`) |
 | `SPRING_PROFILES_ACTIVE` | No | `local` loads gitignored `application-local.properties` |
 
@@ -63,6 +65,43 @@ Passwords: BCrypt. JWT: HS256, `sub` = user id, default expiry 60 minutes.
 
 Identity always comes from the JWT (`UserPrincipal`), never from a client-supplied `userId`.
 
+## Vault API (Phase 4)
+
+Separate from signable documents. Collection: `vault_items`.
+
+| Method | Path | Auth | Notes |
+|--------|------|------|-------|
+| `POST` | `/api/v1/vault` | Bearer | multipart: `file` + optional `category`, `tags`, `note`, `expiryDate` → **201** |
+| `GET` | `/api/v1/vault` | Bearer | List current user's items |
+| `GET` | `/api/v1/vault/{id}` | Bearer | Metadata only (no storage keys) |
+| `PATCH` | `/api/v1/vault/{id}` | Bearer | `note`, `starred`, `expiryDate`, `clearExpiryDate`, `category`, `tags` |
+| `DELETE` | `/api/v1/vault/{id}` | Bearer | **204** — removes metadata + file |
+| `GET` | `/api/v1/vault/{id}/file` | Bearer | Binary download |
+
+Limits: PDF/PNG/JPEG, **5 MB**, magic-byte validated. Categories: `personal|academic|professional|financial|medical|other`.
+
+## Documents API (Phase 4)
+
+Signable documents. Collection: `documents`. Signature merging stays **client-side**.
+
+| Method | Path | Auth | Notes |
+|--------|------|------|-------|
+| `POST` | `/api/v1/documents` | Bearer | multipart `file` — PDF/PNG/JPEG, **3 MB** → **201** |
+| `GET` | `/api/v1/documents` | Bearer | List |
+| `GET` | `/api/v1/documents/{id}` | Bearer | Metadata |
+| `DELETE` | `/api/v1/documents/{id}` | Bearer | **204** |
+| `GET` | `/api/v1/documents/{id}/file` | Bearer | `?variant=original\|signed` |
+| `POST` | `/api/v1/documents/{id}/sign` | Bearer | multipart client-merged signed file (up to **10 MB**) |
+
+## Storage architecture
+
+- Interface: `FileStorageService` (`store` / `open` / `exists` / `delete`)
+- Implementation: `LocalFileStorageService` under `STORAGE_LOCAL_ROOT`
+- MongoDB stores relative **storage keys** only (never absolute paths / dataUrls)
+- Future S3 implementation can replace the local bean without changing vault/document services
+
+Ownership: every query uses `findByIdAndUserId` / `findAllByUserId`. Cross-user access returns **404**.
+
 ## Other URLs
 
 | URL | Auth |
@@ -81,5 +120,6 @@ Identity always comes from the JWT (`UserPrincipal`), never from a client-suppli
 
 ## Deferred
 
-Forgot/reset password, account deletion, password change, vault, documents, certificates, expiry,
-signatures, resume, dashboard, AI, refresh tokens, server-side token revocation.
+Forgot/reset password, account deletion, password change, certificates, expiry aggregation,
+signature library, resume, dashboard aggregation, AI, refresh tokens, server-side signature rendering,
+object-storage (S3) provider.

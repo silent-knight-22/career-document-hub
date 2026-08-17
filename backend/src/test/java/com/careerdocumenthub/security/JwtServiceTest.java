@@ -18,7 +18,8 @@ class JwtServiceTest {
                 new AppProperties.Security(
                         new AppProperties.Security.Jwt(
                                 "unit-test-cdh-jwt-secret-key-32chars!!",
-                                60L)));
+                                60L)),
+                new AppProperties.Storage("./target/test-storage"));
         jwtService = new JwtService(props);
         jwtService.init();
     }
@@ -41,7 +42,8 @@ class JwtServiceTest {
     void blankSecretFailsFast() {
         AppProperties props = new AppProperties(
                 new AppProperties.Cors("http://localhost:5173"),
-                new AppProperties.Security(new AppProperties.Security.Jwt("", 60L)));
+                new AppProperties.Security(new AppProperties.Security.Jwt("", 60L)),
+                new AppProperties.Storage("./target/test-storage"));
         JwtService svc = new JwtService(props);
         assertThatThrownBy(svc::init).isInstanceOf(IllegalStateException.class);
     }
