@@ -1,5 +1,4 @@
 /**
- * User profiles and settings management.
- * Covers profile retrieval, profile updates, and tracking of account settings.
+ * User account persistence (MongoDB documents and repositories).
  */
 package com.careerdocumenthub.users;

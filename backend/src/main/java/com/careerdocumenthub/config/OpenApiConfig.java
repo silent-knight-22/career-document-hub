@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * OpenAPI metadata. Bearer JWT is documented for Phase 2; Phase 1 does not validate tokens.
+ * OpenAPI metadata including Bearer JWT scheme for protected endpoints.
  */
 @Configuration
 public class OpenApiConfig {
@@ -31,7 +31,8 @@ public class OpenApiConfig {
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
                                 .description(
-                                        "JWT Bearer authentication (Phase 2). "
-                                                + "Phase 1 does not issue or validate tokens.")));
+                                        "JWT access token from POST /api/v1/auth/login or /register. "
+                                                + "Send as: Authorization: Bearer <token>. "
+                                                + "Default lifetime: app.security.jwt.expiration-minutes (60).")));
     }
 }

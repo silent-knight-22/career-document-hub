@@ -1,5 +1,4 @@
 /**
- * Authentication and registration feature package.
- * Covers sign up, login, OTP verification, password resets, and JWT generation.
+ * Authentication: register, login, JWT issuance, /me, logout.
  */
 package com.careerdocumenthub.auth;

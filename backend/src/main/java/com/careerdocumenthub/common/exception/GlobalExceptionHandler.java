@@ -2,6 +2,7 @@ package com.careerdocumenthub.common.exception;
 
 import com.careerdocumenthub.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -55,6 +56,28 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(safeClientMessage(ex.getMessage(), "Resource not found")));
     }
 
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateEmail(DuplicateEmailException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler({InvalidCredentialsException.class})
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateKey(DuplicateKeyException ex) {
+        log.debug("Duplicate key: {}", ex.getClass().getSimpleName());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("An account with this email already exists."));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex) {
         log.error("Unhandled exception", ex);
@@ -67,7 +90,6 @@ public class GlobalExceptionHandler {
         if (message == null || message.isBlank()) {
             return fallback;
         }
-        // Avoid leaking low-level details if a caller stuffed them into the exception message.
         String lower = message.toLowerCase();
         if (lower.contains("mongodb") || lower.contains("jdbc") || lower.contains("password")
                 || lower.contains("secret") || lower.contains("token")) {
