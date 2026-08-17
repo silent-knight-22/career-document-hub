@@ -4,6 +4,7 @@ Spring Boot API for Career Document Hub.
 
 **Phase 1:** foundation (config, CORS, exceptions, OpenAPI, health, security skeleton)  
 **Phase 2:** authentication (register/login/me/logout + JWT)
+**Phase 3:** user profile (`GET/PUT /users/me`)
 
 ## Requirements
 
@@ -53,6 +54,15 @@ Responses are wrapped in `ApiResponse` (`success`, `message`, `data`, `timestamp
 
 Passwords: BCrypt. JWT: HS256, `sub` = user id, default expiry 60 minutes.
 
+## Profile API (Phase 3)
+
+| Method | Path | Auth | Notes |
+|--------|------|------|-------|
+| `GET` | `/api/v1/users/me` | Bearer | `{ userId, name, email, createdAt, updatedAt }` |
+| `PUT` | `/api/v1/users/me` | Bearer | Body `{ name }` only — email/password/id not editable |
+
+Identity always comes from the JWT (`UserPrincipal`), never from a client-supplied `userId`.
+
 ## Other URLs
 
 | URL | Auth |
@@ -71,5 +81,5 @@ Passwords: BCrypt. JWT: HS256, `sub` = user id, default expiry 60 minutes.
 
 ## Deferred
 
-Forgot/reset password, profile, vault, documents, certificates, expiry,
+Forgot/reset password, account deletion, password change, vault, documents, certificates, expiry,
 signatures, resume, dashboard, AI, refresh tokens, server-side token revocation.

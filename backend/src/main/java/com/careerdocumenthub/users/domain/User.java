@@ -12,7 +12,7 @@ import java.time.Instant;
 
 /**
  * Registered account. Passwords are stored only as {@code passwordHash} (BCrypt).
- * Extensible for Phase 3 profile fields (avatar, preferences, etc.).
+ * Phase 3 profile updates may change {@code name} only; email remains auth-owned.
  */
 @Data
 @Builder
