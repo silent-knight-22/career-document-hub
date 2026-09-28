@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Central runtime configuration.
  * Only VITE_* keys are available in the browser bundle — never put secrets here.
  */
@@ -17,7 +17,13 @@ export const APP_NAME = 'Career Document Hub';
  * Falls back to localhost only for local development.
  */
 export const API_BASE_URL =
-  rawApiUrl || (isDev ? 'http://localhost:8080/api/v1' : '/api/v1');
+  rawApiUrl || (isDev ? 'http://localhost:8084/api/v1' : '/api/v1');
+
+/**
+ * True only when VITE_API_URL is explicitly set.
+ * Certificates (and future modules) use this to call Spring Boot instead of localStorage.
+ */
+export const isRemoteApiEnabled = Boolean(rawApiUrl);
 
 /** Network defaults shared by api client + Groq fetch helper */
 export const NETWORK = {
@@ -29,13 +35,17 @@ export const NETWORK = {
   retryBaseMs: 400,
 };
 
-/** Warn once in production if API URL was not configured. */
+/**
+ * Phase 1 (Vercel static / localStorage): empty VITE_API_URL is intentional —
+ * modules use isRemoteApiEnabled and stay on localStorage. Log once as info.
+ * When a remote Spring API is hosted elsewhere, set VITE_API_URL in the host env.
+ */
 export function assertProductionConfig() {
   if (!isProd) return;
   if (!rawApiUrl) {
-    logger.error(
-      `[${APP_NAME}] VITE_API_URL is not set. API calls will use relative "/api/v1". ` +
-        'Configure it for your deployment or proxy /api to the Spring Boot service.',
+    logger.info(
+      `[${APP_NAME}] VITE_API_URL is unset — Phase 1 localStorage mode ` +
+        '(no remote API). Set VITE_API_URL when Spring Boot is hosted elsewhere.',
     );
   }
 }

@@ -22,5 +22,9 @@ Welcome to the documentation suite for the **Career Document Hub**. This folder 
 *   **[Product Requirements Document (PRD)](file:///C:/Users/preeti.tewatia/.gemini/antigravity/scratch/career-document-hub/PRD.md)**: Target customer personas, features scope, and business vision.
 *   **[Frontend Technical Design (FTD)](file:///C:/Users/preeti.tewatia/.gemini/antigravity/scratch/career-document-hub/Frontend-Technical-Design.md)**: Developer specifications and detailed sequence diagrams.
 
+### ⚙️ Backend Architecture & Database Design
+*   **[02 Domain Model](file:///C:/Users/preeti.tewatia/.gemini/antigravity/scratch/career-document-hub/docs/architecture/02-domain-model.md)**: Conceptual diagram and entity specifications (User, Resume, Document, Folder, Signature).
+*   **[03 Database Design](file:///C:/Users/preeti.tewatia/.gemini/antigravity/scratch/career-document-hub/docs/architecture/03-database-design.md)**: MongoDB collection mappings, sample JSON payloads, and indexing guidelines.
+
 ### 📜 Changelog
 *   *Changelog*: History of version changes. *(Placeholder)*

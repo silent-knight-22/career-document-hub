@@ -1,27 +1,33 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { Calendar, Hash, ExternalLink, Download, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getCertExpiryStatus, getIssuerColor } from '../../services/certificateService';
+import {
+  getCertExpiryStatus,
+  getIssuerColor,
+  downloadCertificateFile,
+} from '../../services/certificateService';
 import SafeExternalLink from '../common/SafeExternalLink/SafeExternalLink';
-import { sanitizeFilename } from '../../utils/sanitize';
+import { getErrorMessage } from '../../utils/fetchWithRetry';
 
 function CertCard({ cert, onDelete }) {
   const issuerColor = getIssuerColor(cert.issuer);
   const expiry = getCertExpiryStatus(cert.expiryDate);
+  const [downloading, setDownloading] = useState(false);
+  const canDownload = Boolean(cert.dataUrl) || Boolean(cert.hasFile);
 
-  const handleDownload = () => {
-    if (!cert.dataUrl) {
+  const handleDownload = async () => {
+    if (!canDownload) {
       toast.error('No file attached');
       return;
     }
-    if (!cert.dataUrl.startsWith('data:')) {
-      toast.error('Invalid file data.');
-      return;
+    setDownloading(true);
+    try {
+      await downloadCertificateFile(cert);
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Download failed.'));
+    } finally {
+      setDownloading(false);
     }
-    const a = document.createElement('a');
-    a.href = cert.dataUrl;
-    a.download = sanitizeFilename(cert.name);
-    a.click();
   };
 
   return (
@@ -77,8 +83,15 @@ function CertCard({ cert, onDelete }) {
             <ExternalLink size={14} />
           </SafeExternalLink>
         )}
-        {cert.dataUrl && (
-          <button type="button" className="cert-action" onClick={handleDownload} title="Download">
+        {canDownload && (
+          <button
+            type="button"
+            className="cert-action"
+            onClick={handleDownload}
+            title="Download"
+            disabled={downloading}
+            aria-busy={downloading}
+          >
             <Download size={14} />
           </button>
         )}

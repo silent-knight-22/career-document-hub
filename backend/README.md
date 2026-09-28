@@ -93,12 +93,28 @@ Signable documents. Collection: `documents`. Signature merging stays **client-si
 | `GET` | `/api/v1/documents/{id}/file` | Bearer | `?variant=original\|signed` |
 | `POST` | `/api/v1/documents/{id}/sign` | Bearer | multipart client-merged signed file (up to **10 MB**) |
 
+## Certificates API (Phase 5)
+
+Separate collection: `certificates`. File is **optional**. Search stays client-side.
+
+| Method | Path | Auth | Notes |
+|--------|------|------|-------|
+| `POST` | `/api/v1/certificates` | Bearer | multipart: required `name` + `issuer`; optional `file`, `issuedDate`, `expiryDate`, `credentialId`, `credentialUrl` → **201** |
+| `GET` | `/api/v1/certificates` | Bearer | List current user's certificates (newest first) |
+| `GET` | `/api/v1/certificates/{id}` | Bearer | Metadata only (no storage keys / dataUrl) |
+| `PATCH` | `/api/v1/certificates/{id}` | Bearer | Narrow: `expiryDate`, `clearExpiryDate` only |
+| `DELETE` | `/api/v1/certificates/{id}` | Bearer | **204** — removes metadata + file (if any) |
+| `GET` | `/api/v1/certificates/{id}/file` | Bearer | Binary download; **404** when no file |
+
+Limits: PDF/PNG/JPEG, **5 MB**, magic-byte validated. Response fields: `id`, `name`, `issuer`, `issuedDate`, `expiryDate`, `credentialId`, `credentialUrl`, `size`, `type`, `createdAt`, `updatedAt`.
+
 ## Storage architecture
 
 - Interface: `FileStorageService` (`store` / `open` / `exists` / `delete`)
 - Implementation: `LocalFileStorageService` under `STORAGE_LOCAL_ROOT`
 - MongoDB stores relative **storage keys** only (never absolute paths / dataUrls)
-- Future S3 implementation can replace the local bean without changing vault/document services
+- Keys: `{userId}/vault/...`, `{userId}/documents/...`, `{userId}/certificates/{id}.{ext}`
+- Future S3 implementation can replace the local bean without changing vault/document/certificate services
 
 Ownership: every query uses `findByIdAndUserId` / `findAllByUserId`. Cross-user access returns **404**.
 
@@ -120,6 +136,6 @@ Ownership: every query uses `findByIdAndUserId` / `findAllByUserId`. Cross-user 
 
 ## Deferred
 
-Forgot/reset password, account deletion, password change, certificates, expiry aggregation,
+Forgot/reset password, account deletion, password change, expiry aggregation,
 signature library, resume, dashboard aggregation, AI, refresh tokens, server-side signature rendering,
-object-storage (S3) provider.
+object-storage (S3) provider, certificate search/filter APIs, resume–certificate linking.

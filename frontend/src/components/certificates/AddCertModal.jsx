@@ -12,6 +12,7 @@ import {
 } from '../../utils/files';
 import { sanitizeExternalUrl, sanitizeText } from '../../utils/sanitize';
 import { getErrorMessage } from '../../utils/fetchWithRetry';
+import { isRemoteApiEnabled } from '../../config/env';
 
 const emptyForm = () => ({
   name: '',
@@ -81,16 +82,21 @@ export default function AddCertModal({ isOpen, onClose, onSave }) {
     try {
       let dataUrl = null;
       let size = 0;
+      let type = null;
       if (file) {
         await validateUploadFile(file, {
           maxBytes: FILE_LIMITS.CERTIFICATE,
           allowPdf: true,
           allowImages: true,
         });
-        dataUrl = await readFileAsDataUrl(file);
         size = file.size;
+        type = file.type?.includes('pdf') ? 'pdf' : 'image';
+        // Local demo still stores a dataUrl; API mode uploads the File via multipart.
+        if (!isRemoteApiEnabled) {
+          dataUrl = await readFileAsDataUrl(file);
+        }
       }
-      onSave({
+      await onSave({
         name,
         issuer,
         issuedDate: form.issuedDate,
@@ -99,6 +105,8 @@ export default function AddCertModal({ isOpen, onClose, onSave }) {
         credentialUrl,
         dataUrl,
         size,
+        type,
+        file: isRemoteApiEnabled ? file : null,
       });
       handleClose();
     } catch (err) {

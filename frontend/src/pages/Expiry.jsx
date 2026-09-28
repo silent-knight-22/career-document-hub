@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AlarmClock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getVaultItems, updateVaultItem, getExpiryStatus } from '../services/vaultService';
-import { getCertificates, getCertExpiryStatus } from '../services/certificateService';
+import {
+  getCertificates,
+  getCertExpiryStatus,
+  updateCertificateExpiry,
+} from '../services/certificateService';
+import { getErrorMessage } from '../utils/fetchWithRetry';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import EmptyState from '../components/common/EmptyState/EmptyState';
 import ExpiryRow from '../components/expiry/ExpiryRow';
@@ -21,21 +26,43 @@ const SectionHeader = ({ color, emoji, label, count }) => (
 export default function ExpiryTracker() {
   const { user } = useAuth();
 
-  const [vaultItems, setVaultItems]   = useState(() => getVaultItems(user?.userId || '').filter((i) => i.expiryDate));
-  const [certs, setCerts]             = useState(() => getCertificates(user?.userId || '').filter((c) => c.expiryDate));
+  const [vaultItems, setVaultItems] = useState([]);
+  const [certs, setCerts] = useState([]);
 
-  const refresh = () => {
-    setVaultItems(getVaultItems(user?.userId || '').filter((i) => i.expiryDate));
-    setCerts(getCertificates(user?.userId || '').filter((c) => c.expiryDate));
-  };
-
-  const handleRemoveExpiry = (itemId, source) => {
-    if (source === 'vault') {
-      updateVaultItem(user.userId, itemId, { expiryDate: null });
+  const refresh = useCallback(async () => {
+    if (!user?.userId) {
+      setVaultItems([]);
+      setCerts([]);
+      return;
     }
-    // For certificates, could update similarly
-    toast.success('Expiry tracking removed');
+    try {
+      const [vault, certificateList] = await Promise.all([
+        Promise.resolve(getVaultItems(user.userId)),
+        getCertificates(user.userId),
+      ]);
+      setVaultItems(vault.filter((i) => i.expiryDate));
+      setCerts(certificateList.filter((c) => c.expiryDate));
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to load expiry items.'));
+    }
+  }, [user?.userId]);
+
+  useEffect(() => {
     refresh();
+  }, [refresh]);
+
+  const handleRemoveExpiry = async (itemId, source) => {
+    try {
+      if (source === 'vault') {
+        updateVaultItem(user.userId, itemId, { expiryDate: null });
+      } else if (source === 'cert') {
+        await updateCertificateExpiry(user.userId, itemId, { clearExpiryDate: true });
+      }
+      toast.success('Expiry tracking removed');
+      await refresh();
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to clear expiry.'));
+    }
   };
 
   // Merge and annotate

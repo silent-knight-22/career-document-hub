@@ -16,6 +16,11 @@ target/
 .env.development.local
 .env.test.local
 .env.production.local
+backend/.env
+
+# Backend local secrets (never commit)
+backend/src/main/resources/application-local.properties
+**/application-local.properties
 
 # IDE configurations
 .idea/
@@ -25,3 +30,7 @@ target/
 *.njsproj
 *.sln
 *.sw?
+
+# Vercel CLI link metadata
+.vercel/
+

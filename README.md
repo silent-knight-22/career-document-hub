@@ -1,4 +1,4 @@
-# Career Document Hub
+﻿# Career Document Hub
 
 An enterprise-grade, premium, AI-powered Career Document Hub designed to streamline document management, digital signatures, resume building, and document intelligence.
 
@@ -40,6 +40,7 @@ Built with **React**, **Vite**, and **Groq Cloud API** (high-speed Llama-3 & Mix
 *   **Styling**: Pure CSS Custom Properties (Sleek dark mode, glassmorphism, responsive)
 *   **AI Integration**: Groq Cloud REST API (OpenAI-compatible chat/completions)
 *   **PDF Processing**: `pdfjs-dist` (via `react-pdf`)
+*   **Backend (Phase 2+)**: Spring Boot — **not** deployable as Vercel serverless; host separately when ready
 
 ---
 
@@ -47,27 +48,94 @@ Built with **React**, **Vite**, and **Groq Cloud API** (high-speed Llama-3 & Mix
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/career-document-hub.git
+git clone https://github.com/silent-knight-22/career-document-hub.git
 cd career-document-hub/frontend
 ```
 
-### 2. Install dependencies
+### 2. Configure environment
+```bash
+cp .env.example .env
+```
+
+| Mode | `VITE_API_URL` |
+|------|----------------|
+| Local + Spring Boot | `http://localhost:8084/api/v1` (default in `.env.example`) |
+| **Phase 1 Vercel (frontend only)** | **Leave empty / unset** — app uses browser **localStorage** (auth, certificates, vault) |
+| Later (API hosted elsewhere) | Public API base, e.g. `https://api.example.com/api/v1` |
+
+**Never put Groq API keys or other secrets in `VITE_*` variables** — Vite embeds them in the client bundle. Groq keys are entered in the app UI and stored locally for this demo only.
+
+### 3. Install dependencies
 ```bash
 npm install
 ```
 
-### 3. Start the Vite Dev Server
+### 4. Start the Vite Dev Server
 ```bash
 npm run dev
 ```
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### 4. Setup Groq API Key
+### 5. Setup Groq API Key (AI Insights)
 1. Go to the [Groq Console](https://console.groq.com/keys) and generate a free API key.
-2. In the Career Document Hub sidebar, click **AI Insights**.
+2. In the app, open **AI Insights**.
 3. Paste your Groq API key (starting with `gsk_`).
-4. Select your preferred model (e.g. `llama-3.3-70b-versatile` for text or let it auto-detect).
-5. Start summarizing documents!
+4. Select a model or leave auto-detect enabled.
+
+---
+
+## 🚀 Production deploy (Phase 1 — frontend on Vercel)
+
+Spring Boot **cannot** run as serverless on Vercel disk. Phase 1 ships the **static SPA only**. Auth remains localStorage — that is expected.
+
+### Build (verify locally)
+From repo root:
+```bash
+npm run build
+```
+Or:
+```bash
+cd frontend
+npm run build
+```
+Output: `frontend/dist`.
+
+### `vercel.json` (repo root)
+Already configured:
+- `buildCommand`: `cd frontend && npm install && npm run build`
+- `outputDirectory`: `frontend/dist`
+- SPA rewrite: `/(.*) → /index.html`
+- Security headers + CSP (`connect-src` includes `https://api.groq.com` and `https://cdn.jsdelivr.net`)
+- Long-cache for hashed `/assets/*`
+
+Do **not** set secrets in Vercel env for Phase 1. Leave **`VITE_API_URL` unset** so `isRemoteApiEnabled` stays false (localStorage).
+
+### Deploy with Vercel CLI
+```bash
+# one-time
+npx vercel login
+
+# from repo root — preview (preferred first)
+npx vercel
+
+# production only when you are ready
+npx vercel --prod
+```
+
+### Deploy via Vercel Dashboard
+1. Import `https://github.com/silent-knight-22/career-document-hub`
+2. Framework: Other / Vite; root stays repo root (uses root `vercel.json`)
+3. Env: leave `VITE_API_URL` empty for Phase 1
+4. Deploy
+
+### Browser support
+Targets modern evergreen browsers (`es2022`): recent Chrome, Edge, Firefox, and Safari. Requires Web Crypto (`crypto.subtle`) for password hashing.
+
+### Known production limits (local-first demo)
+- Auth, documents, certificates, and signatures live in **browser localStorage** (not multi-device).
+- Groq calls run **from the browser**; move them behind Spring Boot before treating AI as production-grade.
+- Forgot-password explains that email reset is not available until the API ships.
+- Remote API must be hosted elsewhere (Railway, Render, VM, etc.) — then set `VITE_API_URL` on Vercel and redeploy.
 
 ---
 

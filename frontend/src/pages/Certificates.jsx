@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Award, Plus, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import {
-  getCertificates, addCertificate, deleteCertificate
+  getCertificates, addCertificate, deleteCertificate,
 } from '../services/certificateService';
+import { getErrorMessage } from '../utils/fetchWithRetry';
 import PageLayout from '../components/layout/PageLayout/PageLayout';
 import Button from '../components/common/Button/Button';
 import EmptyState from '../components/common/EmptyState/EmptyState';
@@ -15,22 +16,46 @@ import './Certificates.css';
 // ---- Main Page ----
 export default function Certificates() {
   const { user } = useAuth();
-  const [certs, setCerts]     = useState(() => getCertificates(user?.userId || ''));
+  const [certs, setCerts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [search, setSearch]   = useState('');
+  const [search, setSearch] = useState('');
 
-  const refresh = () => setCerts(getCertificates(user?.userId || ''));
+  const refresh = useCallback(async () => {
+    if (!user?.userId) {
+      setCerts([]);
+      setLoading(false);
+      return;
+    }
+    try {
+      const list = await getCertificates(user.userId);
+      setCerts(list);
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to load certificates.'));
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.userId]);
 
-  const handleSave = (data) => {
-    addCertificate(user.userId, data);
-    toast.success('Certificate added');
+  useEffect(() => {
+    setLoading(true);
     refresh();
+  }, [refresh]);
+
+  const handleSave = async (data) => {
+    await addCertificate(user.userId, data);
+    toast.success('Certificate added');
+    await refresh();
   };
 
-  const handleDelete = (certId) => {
-    deleteCertificate(user.userId, certId);
-    toast.success('Certificate removed');
-    refresh();
+  const handleDelete = async (certId) => {
+    try {
+      await deleteCertificate(user.userId, certId);
+      toast.success('Certificate removed');
+      await refresh();
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to delete certificate.'));
+    }
   };
 
   const filtered = certs.filter((c) =>
@@ -43,7 +68,7 @@ export default function Certificates() {
         <div>
           <h2>My Certificates</h2>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-            {certs.length} certificate{certs.length !== 1 ? 's' : ''}
+            {loading ? 'Loading…' : `${certs.length} certificate${certs.length !== 1 ? 's' : ''}`}
           </p>
         </div>
         <Button icon={Plus} onClick={() => setShowAdd(true)}>Add Certificate</Button>
@@ -63,7 +88,7 @@ export default function Certificates() {
         </div>
       )}
 
-      {certs.length === 0 ? (
+      {!loading && certs.length === 0 ? (
         <div className="card animate-fade-in-up">
           <EmptyState
             icon={<Award size={32} />}
